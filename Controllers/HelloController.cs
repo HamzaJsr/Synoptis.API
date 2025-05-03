@@ -14,8 +14,8 @@
         // En gros quand on vas faire un get sur /api/hello on vas appeler cette fonction Get()
         public IActionResult Get()
         {
-            // OK() c'est equivalent à une reponse 200 OK
+            // OK() c'est equivalent à une reponse 200 http OK
             return Ok("Bienvenue sur Synoptis !");
         }
     }
- }
+ }  
