@@ -14,7 +14,7 @@ namespace Synoptis.API.Data
         public SynoptisDbContext(DbContextOptions<SynoptisDbContext> options) : base(options) { }
 
         //La je met mon model de donnee AppelDoffre je le met en tant que DbSet pour quil soit transferer a la bdd lors de la migration
-        public DbSet<AppelOffre> AppelOffres { get; set; }
+        public DbSet<AppelOffre> AppelOffres { get; set; } = null!;
 
     }
 }
