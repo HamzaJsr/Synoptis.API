@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "/Users/hamza/Desktop/Ocr Novembre 2023/Projet_Synoptis/Back_Synoptis/Synoptis.API/Synoptis.API.csproj": {}
+    "C:\\Users\\Hamza El Jefe\\Documents\\Dev Web\\Projet-Synoptis-PC\\Synoptis.API\\Synoptis.API.csproj": {}
   },
   "projects": {
-    "/Users/hamza/Desktop/Ocr Novembre 2023/Projet_Synoptis/Back_Synoptis/Synoptis.API/Synoptis.API.csproj": {
+    "C:\\Users\\Hamza El Jefe\\Documents\\Dev Web\\Projet-Synoptis-PC\\Synoptis.API\\Synoptis.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/hamza/Desktop/Ocr Novembre 2023/Projet_Synoptis/Back_Synoptis/Synoptis.API/Synoptis.API.csproj",
+        "projectUniqueName": "C:\\Users\\Hamza El Jefe\\Documents\\Dev Web\\Projet-Synoptis-PC\\Synoptis.API\\Synoptis.API.csproj",
         "projectName": "Synoptis.API",
-        "projectPath": "/Users/hamza/Desktop/Ocr Novembre 2023/Projet_Synoptis/Back_Synoptis/Synoptis.API/Synoptis.API.csproj",
-        "packagesPath": "/Users/hamza/.nuget/packages/",
-        "outputPath": "/Users/hamza/Desktop/Ocr Novembre 2023/Projet_Synoptis/Back_Synoptis/Synoptis.API/obj/",
+        "projectPath": "C:\\Users\\Hamza El Jefe\\Documents\\Dev Web\\Projet-Synoptis-PC\\Synoptis.API\\Synoptis.API.csproj",
+        "packagesPath": "C:\\Users\\Hamza El Jefe\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Hamza El Jefe\\Documents\\Dev Web\\Projet-Synoptis-PC\\Synoptis.API\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/hamza/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Hamza El Jefe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -47,6 +53,20 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.1, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.4, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.4, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.4, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -72,7 +92,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

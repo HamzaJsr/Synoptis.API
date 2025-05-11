@@ -1,0 +1,24 @@
+# === .NET standard ===
+bin/
+obj/
+*.user
+*.suo
+*.log
+*.db
+*.pfx
+*.key
+*.crt
+*.sqlite
+
+# === VS Code ===
+.vscode/
+
+# === ASP.NET settings perso ===
+appsettings.Development.json
+
+# === système ===
+.DS_Store
+Thumbs.db
+
+# === global secrets ===
+secrets.json

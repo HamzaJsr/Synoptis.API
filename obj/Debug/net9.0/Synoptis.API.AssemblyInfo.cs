@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Synoptis.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+984b16cb9809365b17b1af6196bce4d5ef0f9d27")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03a417b32c2d3c786027f93f33acd5dccc0f7f86")]
 [assembly: System.Reflection.AssemblyProductAttribute("Synoptis.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Synoptis.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
