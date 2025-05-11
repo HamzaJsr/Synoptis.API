@@ -22,3 +22,5 @@ Thumbs.db
 
 # === global secrets ===
 secrets.json
+*.sourcelink.json
+*.csproj.FileListAbsolute.txt
