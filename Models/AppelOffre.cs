@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+using Synoptis.API.Enums;
 
 namespace Synoptis.API.Models
 {
@@ -10,10 +8,22 @@ namespace Synoptis.API.Models
         public Guid Id { get; set; } = Guid.NewGuid(); // Identifiant unique généré automatiquement
 
         public string Titre { get; set; } = string.Empty; // Titre de l’appel d’offres
+        public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
         public string Description { get; set; } = string.Empty; // Description globale
         public DateTime DateLimite { get; set; } // Date limite de réponse
-        public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
 
+        public StatutAppelOffre Statut { get; set; } = StatutAppelOffre.EnCours;
         public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
     }
 }
+
+//Implication modèle de données :
+//Ajouter CreatedByUserId (clé étrangère vers User)
+
+//Ajouter table User avec :
+
+//Id, Nom, Role (Chargé d’affaires, Responsable, Secrétaire)
+
+//AgenceId (pour regroupement par agence)
+
+//Ajouter table Agence si elle n’existe pas

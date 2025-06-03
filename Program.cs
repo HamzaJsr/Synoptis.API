@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
 using Synoptis.API.Models;
+using Synoptis.API.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,10 @@ builder.Services.AddSwaggerGen();
 // Ici je connecte/j'enregistre le DB context dans le program.cs 
 
 builder.Services.AddDbContext<SynoptisDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
+
+builder.Services.AddScoped<AppelOffreService>();
 
 // 🏗️ On construit l'application avec les services définis au-dessus
 var app = builder.Build();
@@ -43,6 +48,15 @@ app.UseHttpsRedirection();
 // Exemple : [Route("api/ao")] dans AOController → devient accessible
 //Sans ça, même si tes controllers sont enregistrés, aucune route ne sera active pour les atteindre : tes méthodes [HttpGet], [HttpPost], etc. ne répondront pas.
 app.MapControllers();
+
+app.Use(async (context, next) =>
+{
+    var endpoint = context.GetEndpoint();
+    if (endpoint != null)
+        Console.WriteLine($"[ROUTE MATCH] {endpoint.DisplayName}");
+
+    await next();
+});
 
 // ▶️ Lancement de l'application
 app.Run();
