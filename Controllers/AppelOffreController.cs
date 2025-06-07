@@ -52,10 +52,29 @@ namespace Synoptis.API.Controllers
 
             if (newAppelOffre.Id == Guid.Empty) // sécurité en plus
                 return BadRequest("ID manquant dans la réponse");
-            Console.WriteLine($"ID généré : {newAppelOffre.Id}");
+
 
 
             return CreatedAtAction("GetAppelOffreById", new { id = newAppelOffre.Id }, newAppelOffre);
+
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<AppelOffreResponseDTO>> DeleteAppelOffreAsync(Guid id)
+        {
+            var appelOffreToDelete = await _appelOffreService.DeleteAppelOffreAsync(id);
+
+
+            if (appelOffreToDelete is null)
+            {
+                return NotFound(new { message = "Pas d'appel d'offre trouvé avec cet id" });
+            }
+
+            return Ok(new
+            {
+                message = $"L'appel d'offre : {appelOffreToDelete.Titre} a bien été supprimé",
+                data = appelOffreToDelete
+            });
 
         }
     }
