@@ -13,5 +13,9 @@ namespace Synoptis.API.Services.Interfaces
 
         // Créer un nouvel AO à partir des données reçues du front en passant par les DTO
         Task<AppelOffreResponseDTO> CreateAppelOffreAsync(AppelOffreCreateDTO dto);
+
+        // Supprimer un AO grace a son id 
+        Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id);
+
     }
 }

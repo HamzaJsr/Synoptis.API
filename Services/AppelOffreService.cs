@@ -116,5 +116,36 @@ namespace Synoptis.API.Services
         }
 
 
+
+        // methode pour supprimer un AO 
+        public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
+        {
+            var appelOffreToDelete = await _context.AppelOffres.FindAsync(id);
+
+            if (appelOffreToDelete is null)
+            {
+                return null;
+            }
+
+            // je supprime de la bdd 
+            _context.AppelOffres.Remove(appelOffreToDelete);
+
+            // Je save le changement de maniere async
+            await _context.SaveChangesAsync();
+
+            // La je retourne un DTO en reponse (au front client)
+
+            return new AppelOffreResponseDTO
+            {
+                Id = appelOffreToDelete.Id,
+                Titre = appelOffreToDelete.Titre,
+                Description = appelOffreToDelete.Description,
+                NomClient = appelOffreToDelete.NomClient,
+                DateLimite = appelOffreToDelete.DateLimite,
+                CreeLe = appelOffreToDelete.CreeLe,
+                Statut = GetStringStatutFromEnum(appelOffreToDelete.Statut)
+            };
+        }
+
     }
 }
