@@ -59,6 +59,24 @@ namespace Synoptis.API.Controllers
 
         }
 
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<AppelOffreResponseDTO>> UpdateAppelOffre(Guid id, [FromBody] AppelOffreUpdateDTO dto)
+        {
+            var updatedAppelOffre = await _appelOffreService.UpdateAppelOffre(id, dto);
+
+            if (updatedAppelOffre is null)
+            {
+                return NotFound(new { message = "Pas d'appel d'offre trouvé avec cet id" });
+            }
+
+            return Ok(new
+            {
+                message = $"L'appel d'offre : {updatedAppelOffre.Titre} a bien été modifié",
+                data = updatedAppelOffre
+            });
+
+        }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<AppelOffreResponseDTO>> DeleteAppelOffreAsync(Guid id)
         {

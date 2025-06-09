@@ -1,6 +1,5 @@
-
-
 namespace Synoptis.API.DTOs
+
 {
     public class AppelOffreResponseDTO
     //  Sert à envoyer uniquement ces données dans un GET /api/ao 

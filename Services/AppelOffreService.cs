@@ -116,6 +116,52 @@ namespace Synoptis.API.Services
         }
 
 
+        // methode pour modifier un AO
+        public async Task<AppelOffreResponseDTO?> UpdateAppelOffre(Guid id, AppelOffreUpdateDTO dto)
+        {
+            var appelOffreToUpdate = await _context.AppelOffres.FindAsync(id);
+
+            if (appelOffreToUpdate == null)
+            {
+                return null; // ou NotFound() dans un contrôleur
+            }
+
+            if (dto.Titre != null)
+            {
+                appelOffreToUpdate.Titre = dto.Titre;
+            }
+
+            if (dto.Description != null)
+            {
+                appelOffreToUpdate.Description = dto.Description;
+            }
+
+            if (dto.DateLimite != null)
+            {
+                appelOffreToUpdate.DateLimite = (DateTime)dto.DateLimite;
+            }
+
+            if (dto.NomClient != null)
+            {
+                appelOffreToUpdate.NomClient = dto.NomClient;
+            }
+
+            // Je save le changement de maniere async
+            await _context.SaveChangesAsync();
+
+            // La je retourne un DTO en reponse (au front client)
+
+            return new AppelOffreResponseDTO
+            {
+                Id = appelOffreToUpdate.Id,
+                Titre = appelOffreToUpdate.Titre,
+                Description = appelOffreToUpdate.Description,
+                NomClient = appelOffreToUpdate.NomClient,
+                DateLimite = appelOffreToUpdate.DateLimite,
+                CreeLe = appelOffreToUpdate.CreeLe,
+                Statut = GetStringStatutFromEnum(appelOffreToUpdate.Statut)
+            };
+        }
 
         // methode pour supprimer un AO 
         public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
