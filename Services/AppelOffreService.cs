@@ -116,6 +116,12 @@ namespace Synoptis.API.Services
         }
 
 
+        // methode pour modifier un AO
+        public async Task<AppelOffreResponseDTO> UpdateAppelOffre(Guid id)
+        {
+            var appelOffreToUpdate = await _context.AppelOffres.FindAsync(id);
+        }
+
 
         // methode pour supprimer un AO 
         public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
