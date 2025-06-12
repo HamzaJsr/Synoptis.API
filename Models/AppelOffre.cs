@@ -14,6 +14,10 @@ namespace Synoptis.API.Models
 
         public StatutAppelOffre Statut { get; set; } = StatutAppelOffre.EnCours;
         public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
+
+        public Guid CreatedById { get; set; }
+        public User CreatedBy { get; set; } = null!;
+
     }
 }
 
