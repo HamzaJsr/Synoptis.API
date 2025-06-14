@@ -45,10 +45,10 @@ namespace Synoptis.API.Controllers
 
 
 
-        [HttpPost]
-        public async Task<ActionResult<AppelOffreResponseDTO>> CreateAppelOffreAsync(AppelOffreCreateDTO dto)
+        [HttpPost("{userId}")]
+        public async Task<ActionResult<AppelOffreResponseDTO>> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
         {
-            var newAppelOffre = await _appelOffreService.CreateAppelOffreAsync(dto);
+            var newAppelOffre = await _appelOffreService.CreateAppelOffreAsync(userId, dto);
 
             if (newAppelOffre.Id == Guid.Empty) // sécurité en plus
                 return BadRequest("ID manquant dans la réponse");
@@ -56,7 +56,6 @@ namespace Synoptis.API.Controllers
 
 
             return CreatedAtAction("GetAppelOffreById", new { id = newAppelOffre.Id }, newAppelOffre);
-
         }
 
         [HttpPatch("{id}")]

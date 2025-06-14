@@ -82,7 +82,7 @@ namespace Synoptis.API.Services
             };
         }
         // methode pour ajouter un AO elle return un DTO pour le front
-        public async Task<AppelOffreResponseDTO> CreateAppelOffreAsync(AppelOffreCreateDTO dto)
+        public async Task<AppelOffreResponseDTO> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
         {
 
             // On transforme le DTO reçu en entité AppelOffre car on ne pourra envoyer en BDD que des type AppelOffre
@@ -92,7 +92,8 @@ namespace Synoptis.API.Services
                 Description = dto.Description,
                 NomClient = dto.NomClient,
                 DateLimite = dto.DateLimite,
-                CreeLe = DateTime.UtcNow
+                CreeLe = DateTime.UtcNow,
+                CreatedById = userId,
             };
 
             //J'ajoute dans la bdd

@@ -12,7 +12,7 @@ namespace Synoptis.API.Services.Interfaces
         Task<AppelOffreResponseDTO?> GetAppelOffreByIdAsync(Guid id);
 
         // Créer un nouvel AO à partir des données reçues du front en passant par les DTO
-        Task<AppelOffreResponseDTO> CreateAppelOffreAsync(AppelOffreCreateDTO dto);
+        Task<AppelOffreResponseDTO> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto);
 
         // Modifier un ao à partir de son id
         Task<AppelOffreResponseDTO?> UpdateAppelOffre(Guid id, AppelOffreUpdateDTO dto);

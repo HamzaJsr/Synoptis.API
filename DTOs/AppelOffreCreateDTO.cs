@@ -11,5 +11,8 @@ namespace Synoptis.API.DTOs
         public DateTime DateLimite { get; set; } // Date limite de réponse
         public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
 
+        // inclure l'id du user pour savoir qui a crée l'ao
+        public Guid CreatedById { get; set; }
+
     }
 }
