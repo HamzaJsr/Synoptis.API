@@ -27,13 +27,14 @@ namespace Synoptis.API.Services
             .Include(ao => ao.CreatedBy)
             .ToListAsync();
 
-            var result = new List<AppelOffreResponseDTO>();
 
-            foreach (var ao in allAppelOffres)
+
+
+            var resultDto = allAppelOffres.Select(ao =>
             {
                 var statutFinal = ao.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : ao.Statut;
 
-                result.Add(new AppelOffreResponseDTO
+                return new AppelOffreResponseDTO
                 {
                     Id = ao.Id,
                     Titre = ao.Titre,
@@ -41,14 +42,22 @@ namespace Synoptis.API.Services
                     NomClient = ao.NomClient,
                     DateLimite = ao.DateLimite,
                     CreeLe = ao.CreeLe,
-                    Statut = _enumToStringService.StatutAoEnumService(statutFinal)
-                });
+                    Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+                    CreatedById = ao.CreatedById,
+                    CreatedBy = new UserBasicDTO
+                    {
+                        Id = ao.CreatedBy.Id,
+                        Nom = ao.CreatedBy.Nom,
+                        Email = ao.CreatedBy.Email,
+                        Role = ao.CreatedBy.Role,
+                        CreeLe = ao.CreatedBy.CreeLe
+                    }
+                };
+            }).ToList();
 
-            }
-
-            return result;
-
+            return resultDto;
         }
+
 
         // methode pour recuperer un AO grace a son ID depuis la bdd
         public async Task<AppelOffreResponseDTO?> GetAppelOffreByIdAsync(Guid id)

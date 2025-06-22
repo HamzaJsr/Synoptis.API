@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
+using Synoptis.API.Enums;
 using Synoptis.API.Models;
 using Synoptis.API.Services.Interfaces;
 
@@ -119,6 +120,29 @@ namespace Synoptis.API.Services
 
             return user.Adapt<UserResponseDTO>();
 
+        }
+
+        public async Task<UserResponseDTO> CreateUserByResponsableAsync(Guid responsableId, CreateUserDTO dto)
+        {
+            var responsable = await _context.Users.FindAsync(responsableId);
+
+            if (responsable == null || responsable.Role != UserRole.ResponsableAgence)
+                throw new UnauthorizedAccessException("Seul un RA peut créer un utilisateur.");
+
+            var nouvelUtilisateur = new User
+            {
+                Nom = dto.Nom,
+                Email = dto.Email,
+                Role = dto.Role,
+                ResponsableId = responsableId
+            };
+
+            nouvelUtilisateur.MotDePasse = _hasher.HashPassword(nouvelUtilisateur, dto.MotDePasse);
+
+            _context.Users.Add(nouvelUtilisateur);
+            await _context.SaveChangesAsync();
+
+            return nouvelUtilisateur.Adapt<UserResponseDTO>();
         }
 
     }

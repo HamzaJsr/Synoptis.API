@@ -16,7 +16,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // Enregistre les services MVC / API //Sans ça, ASP.NET Core ne saura pas comment instancier tes controllers, ni comment faire la liaison modèle → JSON, ni appliquer les attributs [HttpGet], [FromBody], etc.
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+//et la on s'occupe de permettre de recvoir du text json pour les enums
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
 // Il scanne les routes (GET, POST…) = détection des routes

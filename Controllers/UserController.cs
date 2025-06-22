@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Synoptis.API.DTOs;
 using Synoptis.API.Services.Interfaces;
@@ -43,5 +44,14 @@ namespace Synoptis.API.Controllers
 
             return Ok(user);
         }
+
+        [Authorize(Roles = "ResponsableAgence")]
+        [HttpPost("creer-utilisateur/{responsableId}")]
+        public async Task<ActionResult<UserResponseDTO>> CreerUtilisateur(Guid responsableId, CreateUserDTO dto)
+        {
+            var result = await _userService.CreateUserByResponsableAsync(responsableId, dto);
+            return Ok(result);
+        }
+
     }
 }
