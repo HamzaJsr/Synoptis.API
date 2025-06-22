@@ -1,3 +1,5 @@
+using Synoptis.API.Models;
+
 namespace Synoptis.API.DTOs
 
 {
@@ -14,5 +16,11 @@ namespace Synoptis.API.DTOs
         public string Statut { get; set; } = "En cours";
 
         public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
+
+        // pour avoir l'id du createur 
+        public Guid CreatedById { get; set; }
+
+        // pour pouvoir recupere le user complet mais le dto filtrer
+        public UserBasicDTO CreatedBy { get; set; } = null!;
     }
 }

@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Mvc;
 using Synoptis.API.DTOs;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
+using Synoptis.API.Services.Interfaces;
 
 namespace Synoptis.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/[controller]")]
     public class AppelOffreController : ControllerBase
     {
-        private readonly AppelOffreService _appelOffreService;
+        private readonly IAppelOffreService _appelOffreService;
 
-        public AppelOffreController(AppelOffreService appelOffreService)
+        public AppelOffreController(IAppelOffreService appelOffreService)
         {
             _appelOffreService = appelOffreService;
         }
@@ -45,10 +46,10 @@ namespace Synoptis.API.Controllers
 
 
 
-        [HttpPost]
-        public async Task<ActionResult<AppelOffreResponseDTO>> CreateAppelOffreAsync(AppelOffreCreateDTO dto)
+        [HttpPost("{userId}")]
+        public async Task<ActionResult<AppelOffreResponseDTO>> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
         {
-            var newAppelOffre = await _appelOffreService.CreateAppelOffreAsync(dto);
+            var newAppelOffre = await _appelOffreService.CreateAppelOffreAsync(userId, dto);
 
             if (newAppelOffre.Id == Guid.Empty) // sécurité en plus
                 return BadRequest("ID manquant dans la réponse");
@@ -56,7 +57,6 @@ namespace Synoptis.API.Controllers
 
 
             return CreatedAtAction("GetAppelOffreById", new { id = newAppelOffre.Id }, newAppelOffre);
-
         }
 
         [HttpPatch("{id}")]

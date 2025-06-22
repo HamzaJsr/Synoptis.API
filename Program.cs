@@ -1,7 +1,14 @@
+using System.Text;
+using Mapster;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Synoptis.API.Data;
+using Synoptis.API.DTOs;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
+using Synoptis.API.Services.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,9 +22,44 @@ builder.Services.AddControllers();
 // Il scanne les routes (GET, POST…) = détection des routes
 builder.Services.AddEndpointsApiExplorer();
 
+//Configuration pour mapster pour utuliser la methode pour rendre les enum en string 
+TypeAdapterConfig<User, UserResponseDTO>.NewConfig()
+    .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
+TypeAdapterConfig<AppelOffre, AppelOffreShortDTO>.NewConfig()
+    .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
+
+
 // 🔍 On ajoute un explorateur de endpoints HTTP
 // Il scanne les routes (GET, POST…) pour les rendre visibles dans Swagger = génération du document et de l’UI
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Synoptis.API", Version = "v1" });
+    // Voici la config pour activer le support JWT dans Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Entrer 'Bearer' suivi d'un espace et du token JWT. \r\n\r\nExemple : \"Bearer abcdef12345\""
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 // Ici je connecte/j'enregistre le DB context dans le program.cs 
 
@@ -25,7 +67,49 @@ builder.Services.AddDbContext<SynoptisDbContext>(options => options.UseNpgsql(bu
 
 // Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
 
-builder.Services.AddScoped<AppelOffreService>();
+builder.Services.AddScoped<IAppelOffreService, AppelOffreService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<EnumToStringService>();
+
+
+// 🔑 Lecture de la clé JWT depuis la configuration et vérification qu'elle est bien définie
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT secret key is missing.");
+
+// 🔐 Configure le système d'authentification de l'application pour utiliser le schéma JWT Bearer par défaut
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // ⚙️ Paramètres de validation du token JWT reçu dans les requêtes
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            // ✅ Vérifie que l'émetteur du token est bien celui attendu (ex: ton backend)
+            ValidateIssuer = true,
+
+            // ✅ Vérifie que l’audience du token correspond à ce que tu attends (ex: un client autorisé)
+            ValidateAudience = true,
+
+            // ✅ Vérifie que le token n'est pas expiré
+            ValidateLifetime = true,
+
+            // ✅ Vérifie que la signature du token est valide (grâce à la clé secrète)
+            ValidateIssuerSigningKey = true,
+
+            // 🎯 L’émetteur attendu du token (doit correspondre à la valeur dans le token)
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+
+            // 🎯 L’audience attendue du token (pareil, doit correspondre)
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+
+            // 🔐 Utilisation de la Clé utilisée pour valider la signature du token
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+// 🛂 Active le système d'autorisation basé sur les [Authorize], rôles, policies, etc.
+// Nécessaire pour que les contrôleurs puissent vérifier si l'utilisateur est autorisé à accéder à une ressource
+builder.Services.AddAuthorization();
 
 // 🏗️ On construit l'application avec les services définis au-dessus
 var app = builder.Build();
@@ -43,6 +127,15 @@ if (app.Environment.IsDevelopment())
 
 // 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
 app.UseHttpsRedirection();
+
+// 🔓 Analyse le token JWT envoyé dans l'en-tête Authorization, vérifie sa validité,
+// et identifie l'utilisateur (principal) à partir du token.
+// Obligatoire pour que le système [Authorize] fonctionne
+app.UseAuthentication();
+
+// ✅ Une fois que l'utilisateur est "authentifié", cette étape vérifie s'il est "autorisé"
+// à accéder à une route (selon les rôles, policies, ou simplement la présence du token)
+app.UseAuthorization();
 
 // 🔄 Connecte les routes des contrôleurs les active on vas dire
 // Exemple : [Route("api/ao")] dans AOController → devient accessible

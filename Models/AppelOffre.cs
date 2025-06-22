@@ -1,4 +1,5 @@
 
+using Synoptis.API.DTOs;
 using Synoptis.API.Enums;
 
 namespace Synoptis.API.Models
@@ -14,16 +15,10 @@ namespace Synoptis.API.Models
 
         public StatutAppelOffre Statut { get; set; } = StatutAppelOffre.EnCours;
         public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
+
+        public Guid CreatedById { get; set; }
+        public User CreatedBy { get; set; } = null!;
+
     }
 }
 
-//Implication modèle de données :
-//Ajouter CreatedByUserId (clé étrangère vers User)
-
-//Ajouter table User avec :
-
-//Id, Nom, Role (Chargé d’affaires, Responsable, Secrétaire)
-
-//AgenceId (pour regroupement par agence)
-
-//Ajouter table Agence si elle n’existe pas
