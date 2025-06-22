@@ -28,6 +28,9 @@ namespace Synoptis.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreeLe")
                         .HasColumnType("timestamp with time zone");
 
@@ -51,7 +54,54 @@ namespace Synoptis.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedById");
+
                     b.ToTable("AppelOffres");
+                });
+
+            modelBuilder.Entity("Synoptis.API.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreeLe")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MotDePasse")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Synoptis.API.Models.AppelOffre", b =>
+                {
+                    b.HasOne("Synoptis.API.Models.User", "CreatedBy")
+                        .WithMany("AppelOffres")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Synoptis.API.Models.User", b =>
+                {
+                    b.Navigation("AppelOffres");
                 });
 #pragma warning restore 612, 618
         }

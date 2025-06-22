@@ -11,30 +11,21 @@ namespace Synoptis.API.Services
     public class AppelOffreService : IAppelOffreService
     {
         private readonly SynoptisDbContext _context;
+        private readonly EnumToStringService _enumToStringService;
 
-        public AppelOffreService(SynoptisDbContext context) => _context = context;
-
-        public string GetStringStatutFromEnum(StatutAppelOffre statut)
+        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService)
         {
-            return statut switch
-            {
-                StatutAppelOffre.EnCours => "En cours",
-                StatutAppelOffre.SyntheseFaite => "Synthese faite",
-                StatutAppelOffre.Go => "Go",
-                StatutAppelOffre.NoGo => "No go",
-                StatutAppelOffre.Expire => "Expiré",
-                _ => "Inconnu"
-
-            };
+            _context = context;
+            _enumToStringService = enumToStringService;
         }
-
-
 
         // methode pour recuperer tout les AO
         public async Task<IEnumerable<AppelOffreResponseDTO>> GetAllAppelOffresAsync()
         {
 
-            var allAppelOffres = await _context.AppelOffres.ToListAsync();
+            var allAppelOffres = await _context.AppelOffres
+            .Include(ao => ao.CreatedBy)
+            .ToListAsync();
 
             var result = new List<AppelOffreResponseDTO>();
 
@@ -50,7 +41,7 @@ namespace Synoptis.API.Services
                     NomClient = ao.NomClient,
                     DateLimite = ao.DateLimite,
                     CreeLe = ao.CreeLe,
-                    Statut = GetStringStatutFromEnum(statutFinal)
+                    Statut = _enumToStringService.StatutAoEnumService(statutFinal)
                 });
 
             }
@@ -62,7 +53,10 @@ namespace Synoptis.API.Services
         // methode pour recuperer un AO grace a son ID depuis la bdd
         public async Task<AppelOffreResponseDTO?> GetAppelOffreByIdAsync(Guid id)
         {
-            var appelOffre = await _context.AppelOffres.FindAsync(id);
+            var appelOffre = await _context.AppelOffres
+            .Include(ao => ao.CreatedBy)
+            .FirstOrDefaultAsync(ao => ao.Id == id);
+
             if (appelOffre is null)
             {
                 return null;
@@ -78,7 +72,16 @@ namespace Synoptis.API.Services
                 NomClient = appelOffre.NomClient,
                 DateLimite = appelOffre.DateLimite,
                 CreeLe = appelOffre.CreeLe,
-                Statut = GetStringStatutFromEnum(statutFinal)
+                Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+                CreatedById = appelOffre.CreatedById,
+                CreatedBy = new UserBasicDTO
+                {
+                    Id = appelOffre.CreatedBy.Id,
+                    Nom = appelOffre.CreatedBy.Nom,
+                    Email = appelOffre.CreatedBy.Email,
+                    Role = appelOffre.CreatedBy.Role,
+                    CreeLe = appelOffre.CreatedBy.CreeLe
+                }
             };
         }
         // methode pour ajouter un AO elle return un DTO pour le front
@@ -112,7 +115,7 @@ namespace Synoptis.API.Services
                 NomClient = newAppelOffre.NomClient,
                 DateLimite = newAppelOffre.DateLimite,
                 CreeLe = newAppelOffre.CreeLe,
-                Statut = GetStringStatutFromEnum(newAppelOffre.Statut)
+                Statut = _enumToStringService.StatutAoEnumService(newAppelOffre.Statut)
             };
         }
 
@@ -160,7 +163,7 @@ namespace Synoptis.API.Services
                 NomClient = appelOffreToUpdate.NomClient,
                 DateLimite = appelOffreToUpdate.DateLimite,
                 CreeLe = appelOffreToUpdate.CreeLe,
-                Statut = GetStringStatutFromEnum(appelOffreToUpdate.Statut)
+                Statut = _enumToStringService.StatutAoEnumService(appelOffreToUpdate.Statut)
             };
         }
 
@@ -190,7 +193,7 @@ namespace Synoptis.API.Services
                 NomClient = appelOffreToDelete.NomClient,
                 DateLimite = appelOffreToDelete.DateLimite,
                 CreeLe = appelOffreToDelete.CreeLe,
-                Statut = GetStringStatutFromEnum(appelOffreToDelete.Statut)
+                Statut = _enumToStringService.StatutAoEnumService(appelOffreToDelete.Statut)
             };
         }
 

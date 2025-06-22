@@ -1,4 +1,5 @@
 
+using Synoptis.API.DTOs;
 using Synoptis.API.Enums;
 
 namespace Synoptis.API.Models
@@ -21,13 +22,3 @@ namespace Synoptis.API.Models
     }
 }
 
-//Implication modèle de données :
-//Ajouter CreatedByUserId (clé étrangère vers User)
-
-//Ajouter table User avec :
-
-//Id, Nom, Role (Chargé d’affaires, Responsable, Secrétaire)
-
-//AgenceId (pour regroupement par agence)
-
-//Ajouter table Agence si elle n’existe pas

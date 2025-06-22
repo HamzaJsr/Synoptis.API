@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Mvc;
 using Synoptis.API.DTOs;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
+using Synoptis.API.Services.Interfaces;
 
 namespace Synoptis.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/[controller]")]
     public class AppelOffreController : ControllerBase
     {
-        private readonly AppelOffreService _appelOffreService;
+        private readonly IAppelOffreService _appelOffreService;
 
-        public AppelOffreController(AppelOffreService appelOffreService)
+        public AppelOffreController(IAppelOffreService appelOffreService)
         {
             _appelOffreService = appelOffreService;
         }

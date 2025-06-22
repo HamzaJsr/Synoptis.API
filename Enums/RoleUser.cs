@@ -2,9 +2,9 @@ namespace Synoptis.API.Enums
 {
     public enum UserRole
     {
-        Responsable,
+        ResponsableAgence,
         Secretaire,
-        ChargeAffaire
+        ChargeAffaires
     }
 
 }

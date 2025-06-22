@@ -18,9 +18,9 @@ namespace Synoptis.API.DTOs
         public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
 
         // pour avoir l'id du createur 
-        public Guid CreatedByID { get; set; }
+        public Guid CreatedById { get; set; }
 
-        // pour pouvoir recupere le user complet 
-        public User CreatedBy { get; set; } = null!;
+        // pour pouvoir recupere le user complet mais le dto filtrer
+        public UserBasicDTO CreatedBy { get; set; } = null!;
     }
 }
