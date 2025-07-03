@@ -145,5 +145,20 @@ namespace Synoptis.API.Services
             return nouvelUtilisateur.Adapt<UserResponseDTO>();
         }
 
+        public async Task<UserResponseDTO?> GetMeAsync(Guid userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.AppelOffres)
+                .Include(u => u.Collaborateurs)
+                .Include(u => u.Responsable)
+                    .ThenInclude(r => r.Collaborateurs)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return null;
+
+            return user.Adapt<UserResponseDTO>();
+        }
+
     }
 }

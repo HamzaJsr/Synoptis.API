@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
+using Synoptis.API.Mappings;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
 using Synoptis.API.Services.Interfaces;
@@ -29,11 +30,13 @@ builder.Services.AddControllers()
 // Il scanne les routes (GET, POST…) = détection des routes
 builder.Services.AddEndpointsApiExplorer();
 
-//Configuration pour mapster pour utuliser la methode pour rendre les enum en string 
+//Configuration pour mapster pour utiliser la methode pour rendre les enum en string 
 TypeAdapterConfig<User, UserResponseDTO>.NewConfig()
     .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
 TypeAdapterConfig<AppelOffre, AppelOffreShortDTO>.NewConfig()
     .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
+// Pour la route /me pour 
+TypeAdapterConfig.GlobalSettings.Scan(typeof(UserMappingConfig).Assembly);
 
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
