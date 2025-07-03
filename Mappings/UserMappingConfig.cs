@@ -2,6 +2,7 @@ using Mapster;
 using Synoptis.API.DTOs;
 using Synoptis.API.Enums;
 using Synoptis.API.Models;
+using Synoptis.API.Services;
 
 namespace Synoptis.API.Mappings
 {
@@ -12,12 +13,14 @@ namespace Synoptis.API.Mappings
             // 1️⃣ Mapping User → UserShortDTO (pour listes simples, ex: collègues, collaborateurs, responsable)
             config.NewConfig<User, UserShortDTO>()
                 // On convertit l'enum Role en string pour le front
-                .Map(dest => dest.Role, src => src.Role.ToString());
+                .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
 
-            // 2️⃣ Mapping principal : User → UserResponseDTO (le "gros" DTO pour /me)
+            config.NewConfig<AppelOffre, AppelOffreShortDTO>()
+                .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
+
+            //Configuration pour mapster pour utiliser la methode pour rendre les enum en string 
             config.NewConfig<User, UserResponseDTO>()
-                // a) Convertit l'enum Role en string pour plus de lisibilité côté front
-                .Map(dest => dest.Role, src => src.Role.ToString())
+                .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role))
 
                 // b) Mappe la liste des AO de l'utilisateur en version simplifiée (AppelOffreShortDTO)
                 .Map(dest => dest.AppelOffres,

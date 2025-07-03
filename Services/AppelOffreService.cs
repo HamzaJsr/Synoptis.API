@@ -27,9 +27,6 @@ namespace Synoptis.API.Services
             .Include(ao => ao.CreatedBy)
             .ToListAsync();
 
-
-
-
             var resultDto = allAppelOffres.Select(ao =>
             {
                 var statutFinal = ao.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : ao.Statut;

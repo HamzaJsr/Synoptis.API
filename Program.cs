@@ -30,11 +30,7 @@ builder.Services.AddControllers()
 // Il scanne les routes (GET, POST…) = détection des routes
 builder.Services.AddEndpointsApiExplorer();
 
-//Configuration pour mapster pour utiliser la methode pour rendre les enum en string 
-TypeAdapterConfig<User, UserResponseDTO>.NewConfig()
-    .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
-TypeAdapterConfig<AppelOffre, AppelOffreShortDTO>.NewConfig()
-    .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
+
 // Pour la route /me pour 
 TypeAdapterConfig.GlobalSettings.Scan(typeof(UserMappingConfig).Assembly);
 
