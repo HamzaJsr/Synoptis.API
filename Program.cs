@@ -117,6 +117,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Nécessaire pour que les contrôleurs puissent vérifier si l'utilisateur est autorisé à accéder à une ressource
 builder.Services.AddAuthorization();
 
+// 1) Déclare la politique CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+          .WithOrigins("http://localhost:3000")
+          .AllowAnyHeader()
+          .AllowAnyMethod();
+    });
+});
+
 // 🏗️ On construit l'application avec les services définis au-dessus
 var app = builder.Build();
 
@@ -133,6 +145,9 @@ if (app.Environment.IsDevelopment())
 
 // 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
 app.UseHttpsRedirection();
+
+// 2) Place UseCors AVANT UseAuthorization / MapControllers
+app.UseCors("AllowFrontend");
 
 // 🔓 Analyse le token JWT envoyé dans l'en-tête Authorization, vérifie sa validité,
 // et identifie l'utilisateur (principal) à partir du token.
@@ -156,6 +171,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
 
 // ▶️ Lancement de l'application
 app.Run();
