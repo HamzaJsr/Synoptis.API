@@ -10,7 +10,7 @@ public class UserResponseDTO
 
     public ICollection<AppelOffreShortDTO> AppelOffres { get; set; } = new List<AppelOffreShortDTO>();
 
-    public List<UserShortDTO>? Collaborateurs { get; set; } // Pour RA
-    public UserShortDTO? Responsable { get; set; } // Pour CA/Secrétaire
-    public List<UserShortDTO>? Collegues { get; set; } // Pour CA/Secrétaire
+    public List<UserShortDTO>? Collaborateurs { get; set; } = new(); // Pour RA
+    public UserShortDTO? Responsable { get; set; } = new(); // Pour CA/Secrétaire
+    public List<UserShortDTO>? Collegues { get; set; } = new(); // Pour CA/Secrétaire
 }

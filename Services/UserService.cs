@@ -81,44 +81,37 @@ namespace Synoptis.API.Services
         {
             var users = await _context.Users
             .Include(u => u.AppelOffres)
+            .Include(u => u.Responsable)
+            .Include(u => u.Collaborateurs)
             .ToListAsync();
 
-            var resultDto = users.Select(user => new UserResponseDTO
-            {
-                Id = user.Id,
-                Nom = user.Nom,
-                Email = user.Email,
-                Role = _enumToStringService.RoleUserEnumService(user.Role),
-                CreeLe = user.CreeLe,
-                AppelOffres = user.AppelOffres?
-                    .Select(ao => new AppelOffreShortDTO
-                    {
-                        Id = ao.Id,
-                        Titre = ao.Titre,
-                        Description = ao.Description,
-                        DateLimite = ao.DateLimite,
-                        NomClient = ao.NomClient,
-                        Statut = _enumToStringService.StatutAoEnumService(ao.Statut),
-                        CreeLe = ao.CreeLe
-                    }).ToList() ?? new List<AppelOffreShortDTO>()
-            }).ToList();
-
-            return resultDto;
+            return users.Adapt<List<UserResponseDTO>>();
 
         }
 
+        /// <summary>
+        /// Récupère l’utilisateur identifié par <paramref name="userId"/> en incluant :
+        ///  - ses appels d’offres (Include(u => u.AppelOffres)),  
+        ///  - ses collaborateurs directs (Include(u => u.Collaborateurs)) pour un ResponsableAgence,  
+        ///  - son responsable et les collaborateurs de ce responsable (Include(u => u.Responsable).ThenInclude(r => r!.Collaborateurs))  
+        ///    afin que le DTO final contienne à la fois Collaborateurs, Responsable et Collegues.
+        /// </summary>
         public async Task<UserResponseDTO?> GetUserAsync(Guid userId)
         {
             var user = await _context.Users
             .Include(u => u.AppelOffres)
+            .Include(u => u.Responsable)
+                .ThenInclude(r => r!.Collaborateurs)  // ← essentiel pour charger les collègues
+            .Include(u => u.Collaborateurs)
             .FirstOrDefaultAsync(u => u.Id == userId);
+
 
             if (user is null)
             {
                 return null;
             }
 
-            return user.Adapt<UserResponseDTO>();
+            return user?.Adapt<UserResponseDTO>();
 
         }
 

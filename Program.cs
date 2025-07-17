@@ -143,8 +143,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
-app.UseHttpsRedirection();
+// // 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
+// app.UseHttpsRedirection();
 
 // 2) Place UseCors AVANT UseAuthorization / MapControllers
 app.UseCors("AllowFrontend");
