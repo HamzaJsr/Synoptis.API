@@ -10,6 +10,9 @@ namespace Synoptis.API.Services.Interfaces
 
         Task<IEnumerable<UserResponseDTO>> GetAllUsersAsync();
         Task<UserResponseDTO?> GetUserAsync(Guid userId);
+        Task<UserResponseDTO> CreateUserByResponsableAsync(Guid responsableId, CreateUserDTO dto);
+        Task<UserResponseDTO?> GetMeAsync(Guid userId);
+
 
     }
 }

@@ -1,4 +1,5 @@
 
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
@@ -27,13 +28,11 @@ namespace Synoptis.API.Services
             .Include(ao => ao.CreatedBy)
             .ToListAsync();
 
-            var result = new List<AppelOffreResponseDTO>();
-
-            foreach (var ao in allAppelOffres)
+            var resultDto = allAppelOffres.Select(ao =>
             {
                 var statutFinal = ao.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : ao.Statut;
 
-                result.Add(new AppelOffreResponseDTO
+                return new AppelOffreResponseDTO
                 {
                     Id = ao.Id,
                     Titre = ao.Titre,
@@ -41,14 +40,22 @@ namespace Synoptis.API.Services
                     NomClient = ao.NomClient,
                     DateLimite = ao.DateLimite,
                     CreeLe = ao.CreeLe,
-                    Statut = _enumToStringService.StatutAoEnumService(statutFinal)
-                });
+                    Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+                    CreatedById = ao.CreatedById,
+                    CreatedBy = new UserBasicDTO
+                    {
+                        Id = ao.CreatedBy.Id,
+                        Nom = ao.CreatedBy.Nom,
+                        Email = ao.CreatedBy.Email,
+                        Role = ao.CreatedBy.Role,
+                        CreeLe = ao.CreatedBy.CreeLe
+                    }
+                };
+            }).ToList();
 
-            }
-
-            return result;
-
+            return resultDto;
         }
+
 
         // methode pour recuperer un AO grace a son ID depuis la bdd
         public async Task<AppelOffreResponseDTO?> GetAppelOffreByIdAsync(Guid id)
@@ -64,25 +71,28 @@ namespace Synoptis.API.Services
 
             var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
 
-            return new AppelOffreResponseDTO
-            {
-                Id = appelOffre.Id,
-                Titre = appelOffre.Titre,
-                Description = appelOffre.Description,
-                NomClient = appelOffre.NomClient,
-                DateLimite = appelOffre.DateLimite,
-                CreeLe = appelOffre.CreeLe,
-                Statut = _enumToStringService.StatutAoEnumService(statutFinal),
-                CreatedById = appelOffre.CreatedById,
-                CreatedBy = new UserBasicDTO
-                {
-                    Id = appelOffre.CreatedBy.Id,
-                    Nom = appelOffre.CreatedBy.Nom,
-                    Email = appelOffre.CreatedBy.Email,
-                    Role = appelOffre.CreatedBy.Role,
-                    CreeLe = appelOffre.CreatedBy.CreeLe
-                }
-            };
+            // return new AppelOffreResponseDTO
+            // {
+            //     Id = appelOffre.Id,
+            //     Titre = appelOffre.Titre,
+            //     Description = appelOffre.Description,
+            //     NomClient = appelOffre.NomClient,
+            //     DateLimite = appelOffre.DateLimite,
+            //     CreeLe = appelOffre.CreeLe,
+            //     Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+            //     CreatedById = appelOffre.CreatedById,
+            //     CreatedBy = new UserBasicDTO
+            //     {
+            //         Id = appelOffre.CreatedBy.Id,
+            //         Nom = appelOffre.CreatedBy.Nom,
+            //         Email = appelOffre.CreatedBy.Email,
+            //         Role = appelOffre.CreatedBy.Role,
+            //         CreeLe = appelOffre.CreatedBy.CreeLe
+            //     }
+            // };
+
+            return appelOffre.Adapt<AppelOffreResponseDTO>();
+
         }
         // methode pour ajouter un AO elle return un DTO pour le front
         public async Task<AppelOffreResponseDTO> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)

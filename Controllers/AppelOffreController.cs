@@ -30,7 +30,7 @@ namespace Synoptis.API.Controllers
             return Ok(appelOffres);
         }
 
-        [HttpGet("{id}", Name = "GetAppelOffreById")]
+        [HttpGet("{id}", Name = "GetAppelOffreByIdAsync")]
         public async Task<ActionResult<AppelOffreResponseDTO>> GetAppelOffreByIdAsync(Guid id)
         {
             var appelOffre = await _appelOffreService.GetAppelOffreByIdAsync(id);

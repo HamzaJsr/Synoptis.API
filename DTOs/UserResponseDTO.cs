@@ -1,16 +1,16 @@
-using Synoptis.API.Enums;
+using Synoptis.API.DTOs;
 
-
-namespace Synoptis.API.DTOs
+public class UserResponseDTO
 {
-    public class UserResponseDTO
-    {
-        public Guid Id { get; set; } = Guid.NewGuid(); // Identifiant unique généré automatiquement
-        public string Nom { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string? Role { get; set; }
-        public DateTime CreeLe { get; set; } = DateTime.UtcNow; // Horodatage de création
+    public Guid Id { get; set; }
+    public string Nom { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Role { get; set; }
+    public DateTime CreeLe { get; set; }
 
-        public ICollection<AppelOffreShortDTO> AppelOffres { get; set; } = new List<AppelOffreShortDTO>();
-    }
+    public ICollection<AppelOffreShortDTO> AppelOffres { get; set; } = new List<AppelOffreShortDTO>();
+
+    public List<UserShortDTO>? Collaborateurs { get; set; } = new(); // Pour RA
+    public UserShortDTO? Responsable { get; set; } = new(); // Pour CA/Secrétaire
+    public List<UserShortDTO>? Collegues { get; set; } = new(); // Pour CA/Secrétaire
 }

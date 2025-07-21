@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
+using Synoptis.API.Mappings;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
 using Synoptis.API.Services.Interfaces;
@@ -16,17 +17,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // Enregistre les services MVC / API //Sans ça, ASP.NET Core ne saura pas comment instancier tes controllers, ni comment faire la liaison modèle → JSON, ni appliquer les attributs [HttpGet], [FromBody], etc.
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+//et la on s'occupe de permettre de recvoir du text json pour les enums
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
 // Il scanne les routes (GET, POST…) = détection des routes
 builder.Services.AddEndpointsApiExplorer();
 
-//Configuration pour mapster pour utuliser la methode pour rendre les enum en string 
-TypeAdapterConfig<User, UserResponseDTO>.NewConfig()
-    .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
-TypeAdapterConfig<AppelOffre, AppelOffreShortDTO>.NewConfig()
-    .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
+
+// Pour la route /me pour 
+TypeAdapterConfig.GlobalSettings.Scan(typeof(UserMappingConfig).Assembly);
 
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
@@ -111,6 +117,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Nécessaire pour que les contrôleurs puissent vérifier si l'utilisateur est autorisé à accéder à une ressource
 builder.Services.AddAuthorization();
 
+// 1) Déclare la politique CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+          .WithOrigins("http://localhost:3000")
+          .AllowAnyHeader()
+          .AllowAnyMethod();
+    });
+});
+
 // 🏗️ On construit l'application avec les services définis au-dessus
 var app = builder.Build();
 
@@ -125,8 +143,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
-app.UseHttpsRedirection();
+// // 🔐 Redirige automatiquement vers HTTPS si l'utilisateur utilise HTTP
+// app.UseHttpsRedirection();
+
+// 2) Place UseCors AVANT UseAuthorization / MapControllers
+app.UseCors("AllowFrontend");
 
 // 🔓 Analyse le token JWT envoyé dans l'en-tête Authorization, vérifie sa validité,
 // et identifie l'utilisateur (principal) à partir du token.
@@ -150,6 +171,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
 
 // ▶️ Lancement de l'application
 app.Run();

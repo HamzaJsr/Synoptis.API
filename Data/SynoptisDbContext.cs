@@ -20,5 +20,14 @@ namespace Synoptis.API.Data
         public DbSet<AppelOffre> AppelOffres { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Responsable)
+                .WithMany(r => r.Collaborateurs)
+                .HasForeignKey(u => u.ResponsableId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+
     }
 }
