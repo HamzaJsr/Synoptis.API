@@ -16,15 +16,14 @@ namespace Synoptis.API.Services
 
         private readonly SynoptisDbContext _context;
         private readonly TokenService _tokenService;
-        private readonly EnumToStringService _enumToStringService;
 
         private readonly PasswordHasher<User> _hasher = new();
 
-        public UserService(SynoptisDbContext context, TokenService tokenService, EnumToStringService enumToStringService)
+        public UserService(SynoptisDbContext context, TokenService tokenService)
         {
             _context = context;
             _tokenService = tokenService;
-            _enumToStringService = enumToStringService;
+
         }
 
         /// <summary>
@@ -144,7 +143,7 @@ namespace Synoptis.API.Services
                 .Include(u => u.AppelOffres)
                 .Include(u => u.Collaborateurs)
                 .Include(u => u.Responsable)
-                    .ThenInclude(r => r.Collaborateurs)
+                    .ThenInclude(r => r!.Collaborateurs)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)

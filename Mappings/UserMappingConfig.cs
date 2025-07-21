@@ -15,7 +15,15 @@ namespace Synoptis.API.Mappings
                 // On convertit l'enum Role en string pour le front
                 .Map(dest => dest.Role, src => EnumToStringService.RoleUserEnumServiceStatic(src.Role));
 
+            // « Quand je convertis un AppelOffre en AppelOffreShortDTO, je veux mapper Statut manuellement. »
             config.NewConfig<AppelOffre, AppelOffreShortDTO>()
+                // Mapster va automatiquement copier les propriétés qui ont le même nom et le même type…
+                // Mais tu peux surcharger certains champs avec .Map(...).
+                // ➡️ Tu dis :
+                // « Pour la propriété Statut du DTO (dest) destination, voici comment la remplir à partir du src source. »
+                // ➡️ Tu dis :
+                // « Prends la valeur Statut de l’entité (qui est sûrement un enum)
+                // et passe-la à une fonction de conversion pour obtenir une chaîne lisible. »
                 .Map(dest => dest.Statut, src => EnumToStringService.StatutAoEnumServiceStatic(src.Statut));
 
             //Configuration pour mapster pour utiliser la methode pour rendre les enum en string 

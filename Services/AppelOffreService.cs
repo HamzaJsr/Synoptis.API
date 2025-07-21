@@ -1,4 +1,5 @@
 
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
@@ -70,25 +71,28 @@ namespace Synoptis.API.Services
 
             var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
 
-            return new AppelOffreResponseDTO
-            {
-                Id = appelOffre.Id,
-                Titre = appelOffre.Titre,
-                Description = appelOffre.Description,
-                NomClient = appelOffre.NomClient,
-                DateLimite = appelOffre.DateLimite,
-                CreeLe = appelOffre.CreeLe,
-                Statut = _enumToStringService.StatutAoEnumService(statutFinal),
-                CreatedById = appelOffre.CreatedById,
-                CreatedBy = new UserBasicDTO
-                {
-                    Id = appelOffre.CreatedBy.Id,
-                    Nom = appelOffre.CreatedBy.Nom,
-                    Email = appelOffre.CreatedBy.Email,
-                    Role = appelOffre.CreatedBy.Role,
-                    CreeLe = appelOffre.CreatedBy.CreeLe
-                }
-            };
+            // return new AppelOffreResponseDTO
+            // {
+            //     Id = appelOffre.Id,
+            //     Titre = appelOffre.Titre,
+            //     Description = appelOffre.Description,
+            //     NomClient = appelOffre.NomClient,
+            //     DateLimite = appelOffre.DateLimite,
+            //     CreeLe = appelOffre.CreeLe,
+            //     Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+            //     CreatedById = appelOffre.CreatedById,
+            //     CreatedBy = new UserBasicDTO
+            //     {
+            //         Id = appelOffre.CreatedBy.Id,
+            //         Nom = appelOffre.CreatedBy.Nom,
+            //         Email = appelOffre.CreatedBy.Email,
+            //         Role = appelOffre.CreatedBy.Role,
+            //         CreeLe = appelOffre.CreatedBy.CreeLe
+            //     }
+            // };
+
+            return appelOffre.Adapt<AppelOffreResponseDTO>();
+
         }
         // methode pour ajouter un AO elle return un DTO pour le front
         public async Task<AppelOffreResponseDTO> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
