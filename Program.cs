@@ -1,4 +1,8 @@
+using System;
+using System.IO;
 using System.Text;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +14,9 @@ using Synoptis.API.Mappings;
 using Synoptis.API.Models;
 using Synoptis.API.Services;
 using Synoptis.API.Services.Interfaces;
+
+// See https://aka.ms/new-console-template for more information
+Console.WriteLine("Hello, World!");
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,11 +75,29 @@ builder.Services.AddSwaggerGen(c =>
 
 
 // Ici je connecte/j'enregistre le DB context dans le program.cs 
-
 builder.Services.AddDbContext<SynoptisDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
 
+// 🔒 AddSingleton
+// Crée une seule instance pour toute la durée de l’application
+// Utilisé pour des clients qui sont thread-safe et légers à maintenir comme :
+// HttpClient (quand bien configuré)
+// BlobContainerClient
+// ILogger<>
+// services de lecture de configuration
+// ✅ BlobContainerClient est thread-safe, stateless, et léger → donc parfait en Singleton.
+//Ici je vais enregister le service Azure Blob Stockage en singleton pour le recup dans BlobStorageService
+builder.Services.AddSingleton(_ =>
+    new BlobServiceClient(builder.Configuration["AzureBlobStorage:ConnectionString"])
+);
+
+// La je met le service que jai cree pour le recup dans le controler
+builder.Services.AddSingleton<BlobStorageService>();
+
+// Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
+// 🔍 AddScoped
+// Crée une instance par requête HTTP
+// Utile quand le service dépend du contexte utilisateur (ex : DBContext, session)
 builder.Services.AddScoped<IAppelOffreService, AppelOffreService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<TokenService>();
