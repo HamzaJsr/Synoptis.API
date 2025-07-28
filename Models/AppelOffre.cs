@@ -22,6 +22,9 @@ namespace Synoptis.API.Models
         public Guid CreatedById { get; set; }
         public User CreatedBy { get; set; } = null!;
 
+        //Ajout pour lier avec les documents d'appel d'offre
+        public ICollection<DocumentAppelOffre> Documents { get; set; } = new List<DocumentAppelOffre>();
+
     }
 }
 

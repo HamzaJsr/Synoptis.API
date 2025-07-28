@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Synoptis.API.Models
+namespace Synoptis.API.DTOs
 {
-    public class DocumentAppelOffre
+    public class AppelOffreDocumentDTO
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -10,12 +14,6 @@ namespace Synoptis.API.Models
 
         public DateTime DateDepot { get; set; } = DateTime.UtcNow;
 
-        // 🔗 Relations
-        public Guid AppelOffreId { get; set; }
-        public AppelOffre AppelOffre { get; set; } = null!;
-
-        public Guid DeposeParId { get; set; }
-        public User DeposePar { get; set; } = null!;
         public string Url { get; internal set; } = string.Empty;
     }
 }

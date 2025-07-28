@@ -20,7 +20,9 @@ namespace Synoptis.API.DTOs
         // pour avoir l'id du createur 
         public Guid CreatedById { get; set; }
 
-        // pour pouvoir recupere le user complet mais le dto filtrer
+        // pour pouvoir recupere pas le user complet mais le dto filtrer
         public UserBasicDTO CreatedBy { get; set; } = null!;
+
+        public ICollection<AppelOffreDocumentDTO> Documents { get; set; } = new List<AppelOffreDocumentDTO>();
     }
 }

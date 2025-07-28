@@ -1,4 +1,5 @@
 
+using Azure.Storage.Blobs;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
@@ -14,10 +15,17 @@ namespace Synoptis.API.Services
         private readonly SynoptisDbContext _context;
         private readonly EnumToStringService _enumToStringService;
 
-        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService)
+        private readonly BlobServiceClient _blobServiceClient;//Client
+        private readonly BlobContainerClient _blobContainerClient; //Container
+
+        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService, BlobServiceClient blobServiceClient, IConfiguration config)
         {
             _context = context;
             _enumToStringService = enumToStringService;
+            _blobServiceClient = blobServiceClient;//Client
+            var containerName = config["AzureBlobStorage:ContainerName"];
+            _blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+
         }
 
         // methode pour recuperer tout les AO
@@ -26,34 +34,37 @@ namespace Synoptis.API.Services
 
             var allAppelOffres = await _context.AppelOffres
             .Include(ao => ao.CreatedBy)
+            .Include(ao => ao.Documents)
             .ToListAsync();
 
-            var resultDto = allAppelOffres.Select(ao =>
-            {
-                var statutFinal = ao.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : ao.Statut;
+            // var resultDto = allAppelOffres.Select(ao =>
+            // {
+            //     var statutFinal = ao.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : ao.Statut;
 
-                return new AppelOffreResponseDTO
-                {
-                    Id = ao.Id,
-                    Titre = ao.Titre,
-                    Description = ao.Description,
-                    NomClient = ao.NomClient,
-                    DateLimite = ao.DateLimite,
-                    CreeLe = ao.CreeLe,
-                    Statut = _enumToStringService.StatutAoEnumService(statutFinal),
-                    CreatedById = ao.CreatedById,
-                    CreatedBy = new UserBasicDTO
-                    {
-                        Id = ao.CreatedBy.Id,
-                        Nom = ao.CreatedBy.Nom,
-                        Email = ao.CreatedBy.Email,
-                        Role = ao.CreatedBy.Role,
-                        CreeLe = ao.CreatedBy.CreeLe
-                    }
-                };
-            }).ToList();
+            //     return new AppelOffreResponseDTO
+            //     {
+            //         Id = ao.Id,
+            //         Titre = ao.Titre,
+            //         Description = ao.Description,
+            //         NomClient = ao.NomClient,
+            //         DateLimite = ao.DateLimite,
+            //         CreeLe = ao.CreeLe,
+            //         Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+            //         CreatedById = ao.CreatedById,
+            //         CreatedBy = new UserBasicDTO
+            //         {
+            //             Id = ao.CreatedBy.Id,
+            //             Nom = ao.CreatedBy.Nom,
+            //             Email = ao.CreatedBy.Email,
+            //             Role = ao.CreatedBy.Role,
+            //             CreeLe = ao.CreatedBy.CreeLe
+            //         }
+            //     };
+            // }).ToList();
 
-            return resultDto;
+            // return resultDto;
+
+            return allAppelOffres.Adapt<IEnumerable<AppelOffreResponseDTO>>();
         }
 
 
@@ -62,6 +73,7 @@ namespace Synoptis.API.Services
         {
             var appelOffre = await _context.AppelOffres
             .Include(ao => ao.CreatedBy)
+            .Include(ao => ao.Documents)
             .FirstOrDefaultAsync(ao => ao.Id == id);
 
             if (appelOffre is null)
@@ -69,7 +81,7 @@ namespace Synoptis.API.Services
                 return null;
             }
 
-            var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
+            // var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
 
             // return new AppelOffreResponseDTO
             // {
@@ -180,14 +192,28 @@ namespace Synoptis.API.Services
         // methode pour supprimer un AO 
         public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
         {
-            var appelOffreToDelete = await _context.AppelOffres.FindAsync(id);
+            var appelOffreToDelete = await _context.AppelOffres
+            .Include(a => a.Documents)
+            .FirstOrDefaultAsync(a => a.Id == id);
 
             if (appelOffreToDelete is null)
             {
                 return null;
             }
 
-            // je supprime de la bdd 
+            //Supprimer tout les documents de l'ao dabord et dabord d'azure
+            foreach (var doc in appelOffreToDelete.Documents)
+            {
+                var blobName = $"{doc.AppelOffreId}/{doc.TypeDocument}/{doc.NomFichier}";
+                var blobClient = _blobContainerClient.GetBlobClient(blobName);
+
+                await blobClient.DeleteIfExistsAsync();
+            }
+
+            // La je supprime les documents lie a l'ao cote BDD
+            _context.DocumentsAppelOffre.RemoveRange(appelOffreToDelete.Documents);
+
+            // je supprime l'ao de la bdd 
             _context.AppelOffres.Remove(appelOffreToDelete);
 
             // Je save le changement de maniere async

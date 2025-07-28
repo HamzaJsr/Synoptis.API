@@ -15,9 +15,6 @@ using Synoptis.API.Models;
 using Synoptis.API.Services;
 using Synoptis.API.Services.Interfaces;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +28,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddHttpContextAccessor();
 
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
@@ -92,7 +91,8 @@ builder.Services.AddSingleton(_ =>
 );
 
 // La je met le service que jai cree pour le recup dans le controler
-builder.Services.AddSingleton<BlobStorageService>();
+builder.Services.AddScoped<BlobStorageService>();
+
 
 // Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
 // 🔍 AddScoped
@@ -134,7 +134,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
 
             // 🔐 Utilisation de la Clé utilisée pour valider la signature du token
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
+            // ✅ Ces deux lignes sont ESSENTIELLES
+            NameClaimType = "nameid", // ← correspond à "nameid" dans ton token
+            RoleClaimType = "role"    // ← correspond à "role" dans ton token
         };
     });
 
@@ -178,6 +182,7 @@ app.UseCors("AllowFrontend");
 // et identifie l'utilisateur (principal) à partir du token.
 // Obligatoire pour que le système [Authorize] fonctionne
 app.UseAuthentication();
+
 
 // ✅ Une fois que l'utilisateur est "authentifié", cette étape vérifie s'il est "autorisé"
 // à accéder à une route (selon les rôles, policies, ou simplement la présence du token)

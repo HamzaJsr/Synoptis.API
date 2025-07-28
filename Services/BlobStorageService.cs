@@ -1,13 +1,21 @@
+using Azure.Core;
 using Azure.Storage.Blobs;
+using Mapster;
+using Synoptis.API.Data;
+using Synoptis.API.DTOs;
+using Synoptis.API.Models;
+using Synoptis.API.Services.Interfaces;
 
-public class BlobStorageService
+public class BlobStorageService : IBlobStorageService
 {
+    private readonly SynoptisDbContext _context;
     private readonly BlobServiceClient _blobServiceClient;//Client
     private readonly BlobContainerClient _blobContainerClient; //Container
 
 
-    public BlobStorageService(BlobServiceClient blobServiceClient, IConfiguration config)
+    public BlobStorageService(SynoptisDbContext context, BlobServiceClient blobServiceClient, IConfiguration config)
     {
+        _context = context;
         _blobServiceClient = blobServiceClient;//Client
         var containerName = config["AzureBlobStorage:ContainerName"];
         _blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);//Container
@@ -25,16 +33,38 @@ public class BlobStorageService
         return results;
     }
 
-    public async Task UploadAsync(IFormFile file, string clientId, string category)
+    public async Task<AppelOffreDocumentDTO> UploadDocumentAsync(UploadDocumentRequest request, string userId)
     {
-        var blobName = $"{clientId}/{category}/{file.FileName}";
 
+        //Je cree un nom de fichier que jappelle nom de blob enfait quand le nom du fichier est un chemin ca va creer des dossier
+        var blobName = $"{request.AppelOffreId}/{request.File.ContentType}/{request.File.FileName}";
+
+        // La j'initialise un blob avec un nom de fichier
         var blobClient = _blobContainerClient.GetBlobClient(blobName);
 
-        using var stream = file.OpenReadStream();
+        // La je cree un stream que je vais envoyer vers azure a partir du File recu 
+        using var streamContent = request.File.OpenReadStream();
 
-        await blobClient.UploadAsync(stream, overwrite: true);
+        await blobClient.UploadAsync(streamContent, overwrite: true);
+
+        var doc = new DocumentAppelOffre
+        {
+            AppelOffreId = request.AppelOffreId,
+            DeposeParId = Guid.Parse(userId),
+            NomFichier = request.File.FileName,
+            TypeDocument = request.File.ContentType,
+            DateDepot = DateTime.UtcNow,
+            Url = blobClient.Uri.ToString(),
+        };
+
+        _context.DocumentsAppelOffre.Add(doc);
+        await _context.SaveChangesAsync();
+
+        return doc.Adapt<AppelOffreDocumentDTO>();
     }
+
+
+
 
     public async Task<Stream> DownloadAsync(string path)
     {

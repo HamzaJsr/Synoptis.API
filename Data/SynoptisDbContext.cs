@@ -20,6 +20,8 @@ namespace Synoptis.API.Data
         public DbSet<AppelOffre> AppelOffres { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
 
+        public DbSet<DocumentAppelOffre> DocumentsAppelOffre { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()

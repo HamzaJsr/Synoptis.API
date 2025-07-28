@@ -35,7 +35,7 @@ namespace Synoptis.API.Controllers
             var result = await _userService.LoginAsync(dto);
 
             if (result.Token is null)
-                return Unauthorized(result.ErrorMessage ?? "Erreur d'authentification");
+                return Unauthorized(new { errorMessage = "Utilisateur ou mot de passe incorrect" });
 
             return Ok(new { token = result.Token });
         }
