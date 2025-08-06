@@ -1,4 +1,8 @@
+using System;
+using System.IO;
 using System.Text;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +28,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddHttpContextAccessor();
 
 
 // 🔍 On ajoute un explorateur de endpoints HTTP
@@ -68,11 +74,30 @@ builder.Services.AddSwaggerGen(c =>
 
 
 // Ici je connecte/j'enregistre le DB context dans le program.cs 
-
 builder.Services.AddDbContext<SynoptisDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
 
+// 🔒 AddSingleton
+// Crée une seule instance pour toute la durée de l’application
+// Utilisé pour des clients qui sont thread-safe et légers à maintenir comme :
+// HttpClient (quand bien configuré)
+// BlobContainerClient
+// ILogger<>
+// services de lecture de configuration
+// ✅ BlobContainerClient est thread-safe, stateless, et léger → donc parfait en Singleton.
+//Ici je vais enregister le service Azure Blob Stockage en singleton pour le recup dans BlobStorageService
+builder.Services.AddSingleton(_ =>
+    new BlobServiceClient(builder.Configuration["AzureBlobStorage:ConnectionString"])
+);
+
+// La je met le service que jai cree pour le recup dans le controler
+builder.Services.AddScoped<BlobStorageService>();
+
+
+// Ici j'ajoute le service appel d'offre pour pouvoir l'injecter dans le controlleurs.
+// 🔍 AddScoped
+// Crée une instance par requête HTTP
+// Utile quand le service dépend du contexte utilisateur (ex : DBContext, session)
 builder.Services.AddScoped<IAppelOffreService, AppelOffreService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<TokenService>();
@@ -109,7 +134,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
 
             // 🔐 Utilisation de la Clé utilisée pour valider la signature du token
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
+            // ✅ Ces deux lignes sont ESSENTIELLES
+            NameClaimType = "nameid", // ← correspond à "nameid" dans ton token
+            RoleClaimType = "role"    // ← correspond à "role" dans ton token
         };
     });
 
@@ -153,6 +182,7 @@ app.UseCors("AllowFrontend");
 // et identifie l'utilisateur (principal) à partir du token.
 // Obligatoire pour que le système [Authorize] fonctionne
 app.UseAuthentication();
+
 
 // ✅ Une fois que l'utilisateur est "authentifié", cette étape vérifie s'il est "autorisé"
 // à accéder à une route (selon les rôles, policies, ou simplement la présence du token)

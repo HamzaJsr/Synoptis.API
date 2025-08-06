@@ -18,6 +18,10 @@ namespace Synoptis.API.Models
         public Guid? ResponsableId { get; set; }
         public User? Responsable { get; set; }
         public ICollection<User> Collaborateurs { get; set; } = new List<User>();
+
+        //Ajout pour lier avec les documents d'appel d'offre
+        public ICollection<DocumentAppelOffre> DocumentsDeposes { get; set; } = new List<DocumentAppelOffre>();
+
     }
 }
 

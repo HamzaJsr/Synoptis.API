@@ -77,7 +77,7 @@ namespace Synoptis.API.Controllers
 
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<ActionResult<AppelOffreResponseDTO>> DeleteAppelOffreAsync(Guid id)
         {
             var appelOffreToDelete = await _appelOffreService.DeleteAppelOffreAsync(id);
