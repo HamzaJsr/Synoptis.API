@@ -29,7 +29,7 @@ namespace Synoptis.API.Controllers
 
         [Authorize]
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload([FromForm] UploadDocumentRequest request)
+        public async Task<ActionResult> Upload([FromForm] UploadDocumentRequest request)
         {
             if (request.File == null || request.File.Length == 0)
                 return BadRequest("Fichier invalide.");
@@ -43,6 +43,22 @@ namespace Synoptis.API.Controllers
             var document = await _blobService.UploadDocumentAsync(request, userId);
 
             return Ok(new { message = "Upload réussi", document });
+        }
+
+        [Authorize]
+        [HttpDelete("delete/{documentId}")]
+        public async Task<ActionResult<AppelOffreDocumentDTO?>> DeleteDocumentAsync(Guid documentId)
+        {
+            var doc = await _blobService.DeleteDocumentAsync(documentId);
+
+            if (doc == null)
+                return NotFound(new { message = "Pas de document trouvé avec cet id" });
+
+            return Ok(new
+            {
+                message = $"L'appel d'offre : {doc.NomFichier} a bien été supprimé",
+                data = doc
+            });
         }
 
     }

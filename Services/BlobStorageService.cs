@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Storage.Blobs;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
 using Synoptis.API.DTOs;
 using Synoptis.API.Models;
@@ -63,13 +64,45 @@ public class BlobStorageService : IBlobStorageService
         return doc.Adapt<AppelOffreDocumentDTO>();
     }
 
-
-
-
-    public async Task<Stream> DownloadAsync(string path)
+    // Services/BlobStorageService.cs
+    public async Task<AppelOffreDocumentDTO?> DeleteDocumentAsync(Guid documentId)
     {
-        var blobClient = _blobContainerClient.GetBlobClient(path);
-        var result = await blobClient.DownloadAsync();
-        return result.Value.Content;
+        // Récupérer le doc de la bdd
+        var doc = await _context.DocumentsAppelOffre
+            // ⚠️ "Ne pas suivre cet objet dans le DbContext"
+            //         🔧 À quoi ça sert ?
+            // ✅ Lecture seule (ex : vérification d’existence, affichage simple)
+            // ✅ Performance améliorée (pas de tracking, donc moins de mémoire utilisée)
+            // ❌ Mais tu ne peux pas modifier doc puis faire SaveChanges() — EF ne la suivra pas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == documentId);
+
+        if (doc is null) return null;
+
+        // (Optionnel) Vérifier les droits : ex. seul RA ou le déposant peut supprimer
+        // if (doc.DeposeParId != Guid.Parse(requesterId)) { throw new UnauthorizedAccessException(); }
+
+        // Reconstituer le blobName (même logique que l’upload)
+        var blobName = $"{doc.AppelOffreId}/{doc.TypeDocument}/{doc.NomFichier}";
+        // Une fois le blobname recup je cree le client qui est enfait le doc en question.
+        var blobClient = _blobContainerClient.GetBlobClient(blobName);
+
+        // Supprimer le blob (si existe)
+        await blobClient.DeleteIfExistsAsync();
+
+        // Supprimer la ligne BDD
+        _context.DocumentsAppelOffre.Remove(doc);
+        await _context.SaveChangesAsync();
+
+        return doc.Adapt<AppelOffreDocumentDTO>();
     }
+
+
+
+    // public async Task<Stream> DownloadAsync(string path)
+    // {
+    //     var blobClient = _blobContainerClient.GetBlobClient(path);
+    //     var result = await blobClient.DownloadAsync();
+    //     return result.Value.Content;
+    // }
 }
