@@ -1,5 +1,7 @@
 using Azure.Core;
+using Azure.Storage;
 using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Synoptis.API.Data;
@@ -12,13 +14,16 @@ public class BlobStorageService : IBlobStorageService
     private readonly SynoptisDbContext _context;
     private readonly BlobServiceClient _blobServiceClient;//Client
     private readonly BlobContainerClient _blobContainerClient; //Container
+    private readonly IConfiguration _config;
 
 
     public BlobStorageService(SynoptisDbContext context, BlobServiceClient blobServiceClient, IConfiguration config)
     {
         _context = context;
         _blobServiceClient = blobServiceClient;//Client
+        _config = config;
         var containerName = config["AzureBlobStorage:ContainerName"];
+
         _blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);//Container
     }
 
@@ -64,7 +69,7 @@ public class BlobStorageService : IBlobStorageService
         return doc.Adapt<AppelOffreDocumentDTO>();
     }
 
-    // Services/BlobStorageService.cs
+
     public async Task<AppelOffreDocumentDTO?> DeleteDocumentAsync(Guid documentId)
     {
         // Récupérer le doc de la bdd
@@ -97,6 +102,37 @@ public class BlobStorageService : IBlobStorageService
         return doc.Adapt<AppelOffreDocumentDTO>();
     }
 
+
+
+
+    public string GenerateSasUrl(string blobName, TimeSpan duration)
+    {
+        var blobClient = _blobContainerClient.GetBlobClient(blobName);
+
+        // 1) Récupère les secrets
+        var accountName = _config["AzureBlobStorage:AccountName"];
+        var accountKey = _config["AzureBlobStorage:AccountKey"];
+
+        // 2) Construit le SAS (lecture seule)
+        var sasBuilder = new BlobSasBuilder
+        {
+            BlobContainerName = _blobContainerClient.Name,
+            BlobName = blobClient.Name,
+            Resource = "b", // "b" = blob
+            ExpiresOn = DateTimeOffset.UtcNow.Add(duration)
+        };
+        sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+        // (Optionnel) forcer téléchargement avec le nom d’origine
+        // sasBuilder.ContentDisposition = $"inline; filename=\"{Path.GetFileName(blobClient.Name)}\"";
+
+        // 3) Signe le token avec la clé du compte
+        var creds = new StorageSharedKeyCredential(accountName, accountKey);
+        var sasToken = sasBuilder.ToSasQueryParameters(creds).ToString();
+
+        // 4) Retourne l’URL signée
+        return $"{blobClient.Uri}?{sasToken}";
+    }
 
 
     // public async Task<Stream> DownloadAsync(string path)

@@ -18,13 +18,16 @@ namespace Synoptis.API.Services
         private readonly BlobServiceClient _blobServiceClient;//Client
         private readonly BlobContainerClient _blobContainerClient; //Container
 
-        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService, BlobServiceClient blobServiceClient, IConfiguration config)
+        private readonly BlobStorageService _blobService;
+
+        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService, BlobServiceClient blobServiceClient, IConfiguration config, BlobStorageService blobService)
         {
             _context = context;
             _enumToStringService = enumToStringService;
             _blobServiceClient = blobServiceClient;//Client
             var containerName = config["AzureBlobStorage:ContainerName"];
             _blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            _blobService = blobService;
 
         }
 
@@ -80,6 +83,13 @@ namespace Synoptis.API.Services
             {
                 return null;
             }
+
+            foreach (var doc in appelOffre.Documents)
+            {
+                var blobName = $"{doc.AppelOffreId}/{doc.TypeDocument}/{doc.NomFichier}";
+                doc.Url = _blobService.GenerateSasUrl(blobName, TimeSpan.FromMinutes(10));
+            }
+
 
             // var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
 
