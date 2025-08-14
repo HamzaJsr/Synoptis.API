@@ -84,12 +84,18 @@ namespace Synoptis.API.Services
                 return null;
             }
 
-            foreach (var doc in appelOffre.Documents)
-            {
-                var blobName = $"{doc.AppelOffreId}/{doc.TypeDocument}/{doc.NomFichier}";
-                doc.Url = _blobService.GenerateSasUrl(blobName, TimeSpan.FromMinutes(10));
-            }
+            var dto = appelOffre.Adapt<AppelOffreResponseDTO>();
 
+            // Statut calculé côté service
+            var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
+            dto.Statut = _enumToStringService.StatutAoEnumService(statutFinal);
+
+            // SAS par document
+            foreach (var d in dto.Documents)
+            {
+                var blobName = $"{appelOffre.Id}/{d.TypeDocument}/{d.NomFichier}";
+                d.Url = _blobService.GenerateSasUrl(blobName, TimeSpan.FromMinutes(10));
+            }
 
             // var statutFinal = appelOffre.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : appelOffre.Statut;
 
@@ -113,7 +119,7 @@ namespace Synoptis.API.Services
             //     }
             // };
 
-            return appelOffre.Adapt<AppelOffreResponseDTO>();
+            return dto;
 
         }
         // methode pour ajouter un AO elle return un DTO pour le front
