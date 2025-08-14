@@ -66,7 +66,12 @@ public class BlobStorageService : IBlobStorageService
         _context.DocumentsAppelOffre.Add(doc);
         await _context.SaveChangesAsync();
 
-        return doc.Adapt<AppelOffreDocumentDTO>();
+
+        // 👉 On renvoie un DTO avec URL SAS (temporaire) pour le front
+        var dto = doc.Adapt<AppelOffreDocumentDTO>();
+        dto.Url = GenerateSasUrl(blobName, TimeSpan.FromMinutes(10));
+
+        return dto;
     }
 
 
@@ -107,32 +112,37 @@ public class BlobStorageService : IBlobStorageService
 
     public string GenerateSasUrl(string blobName, TimeSpan duration)
     {
+        // 1️⃣ On récupère une référence vers le blob précis (fichier) dans le container
         var blobClient = _blobContainerClient.GetBlobClient(blobName);
 
-        // 1) Récupère les secrets
-        var accountName = _config["AzureBlobStorage:AccountName"];
-        var accountKey = _config["AzureBlobStorage:AccountKey"];
-
-        // 2) Construit le SAS (lecture seule)
+        // 2️⃣ On prépare un constructeur de SAS (BlobSasBuilder) qui contient :
         var sasBuilder = new BlobSasBuilder
         {
-            BlobContainerName = _blobContainerClient.Name,
-            BlobName = blobClient.Name,
-            Resource = "b", // "b" = blob
-            ExpiresOn = DateTimeOffset.UtcNow.Add(duration)
+            BlobContainerName = _blobContainerClient.Name, // nom du container Azure
+            BlobName = blobClient.Name,                    // nom du blob (fichier)
+            Resource = "b",                                // "b" = blob (fichier unique)
+            ExpiresOn = DateTimeOffset.UtcNow.Add(duration) // date/heure d'expiration du lien
         };
+
+        // 3️⃣ On donne les permissions du SAS → ici, uniquement "Read" (lecture seule)
         sasBuilder.SetPermissions(BlobSasPermissions.Read);
 
-        // (Optionnel) forcer téléchargement avec le nom d’origine
-        // sasBuilder.ContentDisposition = $"inline; filename=\"{Path.GetFileName(blobClient.Name)}\"";
+        // 4️⃣ On récupère la clé secrète du compte Azure
+        //    - en prod, elle doit venir de la variable d'environnement
+        //    - en dev, on peut la prendre depuis la configuration appsettings
+        var sharedKey = Environment.GetEnvironmentVariable("AZURE_BLOB_ACCOUNT_KEY")
+                        ?? _config["AzureBlobStorage:AccountKey"]; // dev uniquement
 
-        // 3) Signe le token avec la clé du compte
-        var creds = new StorageSharedKeyCredential(accountName, accountKey);
-        var sasToken = sasBuilder.ToSasQueryParameters(creds).ToString();
+        // 5️⃣ On signe le SAS avec la clé du compte
+        //    Cela crée une signature cryptée qui prouve à Azure que ce lien est valide
+        var sasToken = sasBuilder.ToSasQueryParameters(
+            new StorageSharedKeyCredential(_blobServiceClient.AccountName, sharedKey)
+        ).ToString();
 
-        // 4) Retourne l’URL signée
+        // 6️⃣ On retourne l'URL complète : URL publique du blob + paramètres SAS
         return $"{blobClient.Uri}?{sasToken}";
     }
+
 
 
     // public async Task<Stream> DownloadAsync(string path)
