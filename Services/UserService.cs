@@ -33,24 +33,59 @@ namespace Synoptis.API.Services
         /// <returns></returns>
         public async Task<UserRegisterResponseDTO> RegisterAsync(UserRegisterDTO dto)
         {
-            // Vérifie si l'email existe déjà
+            // 1) Email unique
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
                 return new UserRegisterResponseDTO { Success = false, Message = "Email déjà utilisé" };
 
-            var user = new User
+            // 2) Construire Company
+            var company = new Company
             {
-                Email = dto.Email,
-                Nom = dto.Nom
+                RaisonSociale = dto.Company.RaisonSociale?.Trim() ?? string.Empty,
+                Siret = dto.Company.Siret?.Trim() ?? string.Empty,
+                Adresse = dto.Company.Adresse?.Trim() ?? string.Empty,
+                Ville = dto.Company.Ville?.Trim() ?? string.Empty,
+                CodePostal = dto.Company.CodePostal?.Trim() ?? string.Empty,
+                Pays = dto.Company.Pays?.Trim() ?? string.Empty,
+                FormeJuridique = dto.Company.FormeJuridique?.Trim() ?? string.Empty
             };
 
+            // 3) Construire User
+            var user = new User
+            {
+                Prenom = dto.Prenom.Trim(),
+                Nom = dto.Nom.Trim(),
+                Email = dto.Email.Trim(),
+                Role = UserRole.ResponsableAgence
+                // CompanyId sera posé après la création de Company
+            };
             user.MotDePasse = _hasher.HashPassword(user, dto.MotDePasse);
 
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            // 4) Transaction explicite : TOUT ou RIEN
+            await using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Companies.Add(company);
+                await _context.SaveChangesAsync();      // Étape 1 OK → Company insérée
 
-            return new UserRegisterResponseDTO { Success = true, Message = "Utilisateur créé !" };
+                user.CompanyId = company.Id;            // Lier l'utilisateur au tenant
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();      // Étape 2 OK → User inséré
 
+                await tx.CommitAsync();                 // ✅ On valide tout
+            }
+            catch
+            {
+                await tx.RollbackAsync();               // ❌ On annule tout si une étape échoue
+                throw;                                  // On laisse remonter (middleware/controller gère)
+            }
+
+            return new UserRegisterResponseDTO
+            {
+                Success = true,
+                Message = "Utilisateur et société créés.",
+            };
         }
+
 
         public async Task<AuthResultDTO> LoginAsync(LoginDTO dto)
         {

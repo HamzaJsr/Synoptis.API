@@ -12,7 +12,7 @@ namespace Synoptis.API.Models
         public string Titre { get; set; } = string.Empty; // Titre de l’appel d’offres
         public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
         public string Description { get; set; } = string.Empty; // Description globale
-        [Column(TypeName = "timestamp without time zone")]
+
         public DateTime DateLimite { get; set; }
 
 
@@ -22,9 +22,12 @@ namespace Synoptis.API.Models
         public Guid CreatedById { get; set; }
         public User CreatedBy { get; set; } = null!;
 
+        // 🔗 Multi-tenant
+        public Guid CompanyId { get; set; }          // ← FK
+        public Company Company { get; set; } = null!; // ← navigation
+
         //Ajout pour lier avec les documents d'appel d'offre
         public ICollection<DocumentAppelOffre> Documents { get; set; } = new List<DocumentAppelOffre>();
 
     }
 }
-

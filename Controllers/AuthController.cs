@@ -6,7 +6,7 @@ using Synoptis.API.Services.Interfaces;
 namespace Synoptis.API.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -16,6 +16,7 @@ namespace Synoptis.API.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<UserRegisterResponseDTO>> RegisterAsync(UserRegisterDTO dto)
         {
@@ -29,6 +30,7 @@ namespace Synoptis.API.Controllers
             return Ok(result.Message);
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<AuthResultDTO>> LoginAsync(LoginDTO dto)
         {

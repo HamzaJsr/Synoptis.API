@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Synoptis.API.DTOs;
 using Synoptis.API.Models;
-using Synoptis.API.Services;
 using Synoptis.API.Services.Interfaces;
 
 namespace Synoptis.API.Controllers
@@ -17,6 +17,7 @@ namespace Synoptis.API.Controllers
             _appelOffreService = appelOffreService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AppelOffre>>> GetAllAppelOffresAsync()
         {
@@ -30,6 +31,7 @@ namespace Synoptis.API.Controllers
             return Ok(appelOffres);
         }
 
+        [Authorize]
         [HttpGet("{id}", Name = "GetAppelOffreByIdAsync")]
         public async Task<ActionResult<AppelOffreResponseDTO>> GetAppelOffreByIdAsync(Guid id)
         {
@@ -45,7 +47,7 @@ namespace Synoptis.API.Controllers
         }
 
 
-
+        [Authorize]
         [HttpPost("{userId}")]
         public async Task<ActionResult<AppelOffreResponseDTO>> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
         {
@@ -54,11 +56,10 @@ namespace Synoptis.API.Controllers
             if (newAppelOffre.Id == Guid.Empty) // sécurité en plus
                 return BadRequest("ID manquant dans la réponse");
 
-
-
             return CreatedAtAction("GetAppelOffreById", new { id = newAppelOffre.Id }, newAppelOffre);
         }
 
+        [Authorize]
         [HttpPatch("{id}")]
         public async Task<ActionResult<AppelOffreResponseDTO>> UpdateAppelOffre(Guid id, [FromBody] AppelOffreUpdateDTO dto)
         {
@@ -77,6 +78,7 @@ namespace Synoptis.API.Controllers
 
         }
 
+        [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult<AppelOffreResponseDTO>> DeleteAppelOffreAsync(Guid id)
         {

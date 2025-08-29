@@ -12,8 +12,8 @@ using Synoptis.API.Data;
 namespace Synoptis.API.Migrations
 {
     [DbContext(typeof(SynoptisDbContext))]
-    [Migration("20250727115408_AjoutUrlDocument")]
-    partial class AjoutUrlDocument
+    [Migration("20250819051437_InitWithTenant")]
+    partial class InitWithTenant
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,6 +29,9 @@ namespace Synoptis.API.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CreatedById")
@@ -57,9 +60,58 @@ namespace Synoptis.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("CreatedById");
 
                     b.ToTable("AppelOffres");
+                });
+
+            modelBuilder.Entity("Synoptis.API.Models.Company", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Adresse")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("CodePostal")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreeLe")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FormeJuridique")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Pays")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RaisonSociale")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Siret")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Ville")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("Synoptis.API.Models.DocumentAppelOffre", b =>
@@ -104,6 +156,9 @@ namespace Synoptis.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreeLe")
                         .HasColumnType("timestamp with time zone");
 
@@ -119,6 +174,10 @@ namespace Synoptis.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Prenom")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("ResponsableId")
                         .HasColumnType("uuid");
 
@@ -127,6 +186,8 @@ namespace Synoptis.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("ResponsableId");
 
                     b.ToTable("Users");
@@ -134,11 +195,19 @@ namespace Synoptis.API.Migrations
 
             modelBuilder.Entity("Synoptis.API.Models.AppelOffre", b =>
                 {
+                    b.HasOne("Synoptis.API.Models.Company", "Company")
+                        .WithMany("AppelsOffre")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Synoptis.API.Models.User", "CreatedBy")
                         .WithMany("AppelOffres")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Company");
 
                     b.Navigation("CreatedBy");
                 });
@@ -164,10 +233,18 @@ namespace Synoptis.API.Migrations
 
             modelBuilder.Entity("Synoptis.API.Models.User", b =>
                 {
+                    b.HasOne("Synoptis.API.Models.Company", "Company")
+                        .WithMany("Users")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Synoptis.API.Models.User", "Responsable")
                         .WithMany("Collaborateurs")
                         .HasForeignKey("ResponsableId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
 
                     b.Navigation("Responsable");
                 });
@@ -175,6 +252,13 @@ namespace Synoptis.API.Migrations
             modelBuilder.Entity("Synoptis.API.Models.AppelOffre", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Synoptis.API.Models.Company", b =>
+                {
+                    b.Navigation("AppelsOffre");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Synoptis.API.Models.User", b =>
