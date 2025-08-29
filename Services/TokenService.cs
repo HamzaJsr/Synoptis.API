@@ -32,7 +32,8 @@ namespace Synoptis.API.Services
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim("companyId", user.CompanyId.ToString())
                 }
                 ),
                 //Puis on met le delais d'expiration

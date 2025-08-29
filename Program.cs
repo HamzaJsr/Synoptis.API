@@ -142,6 +142,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
 // 🛂 Active le système d'autorisation basé sur les [Authorize], rôles, policies, etc.
 // Nécessaire pour que les contrôleurs puissent vérifier si l'utilisateur est autorisé à accéder à une ressource
 builder.Services.AddAuthorization();

@@ -6,13 +6,16 @@ using Synoptis.API.Data;
 using Synoptis.API.DTOs;
 using Synoptis.API.Enums;
 using Synoptis.API.Models;
+using Synoptis.API.Services.Abstractions;
 using Synoptis.API.Services.Interfaces;
+
 
 namespace Synoptis.API.Services
 {
-    public class AppelOffreService : IAppelOffreService
+    public class AppelOffreService : TenantAwareService, IAppelOffreService
     {
-        private readonly SynoptisDbContext _context;
+
+        private readonly SynoptisDbContext _dbContext;
         private readonly EnumToStringService _enumToStringService;
 
         private readonly BlobServiceClient _blobServiceClient;//Client
@@ -20,9 +23,9 @@ namespace Synoptis.API.Services
 
         private readonly BlobStorageService _blobService;
 
-        public AppelOffreService(SynoptisDbContext context, EnumToStringService enumToStringService, BlobServiceClient blobServiceClient, IConfiguration config, BlobStorageService blobService)
+        public AppelOffreService(SynoptisDbContext dbContext, EnumToStringService enumToStringService, BlobServiceClient blobServiceClient, IConfiguration config, BlobStorageService blobService, IHttpContextAccessor http) : base(http)
         {
-            _context = context;
+            _dbContext = dbContext;
             _enumToStringService = enumToStringService;
             _blobServiceClient = blobServiceClient;//Client
             var containerName = config["AzureBlobStorage:ContainerName"];
@@ -35,7 +38,8 @@ namespace Synoptis.API.Services
         public async Task<IEnumerable<AppelOffreResponseDTO>> GetAllAppelOffresAsync()
         {
 
-            var allAppelOffres = await _context.AppelOffres
+            var allAppelOffres = await _dbContext.AppelOffres
+            .Where(ao => ao.CompanyId == CompanyId)
             .Include(ao => ao.CreatedBy)
             .Include(ao => ao.Documents)
             .ToListAsync();
@@ -74,10 +78,10 @@ namespace Synoptis.API.Services
         // methode pour recuperer un AO grace a son ID depuis la bdd
         public async Task<AppelOffreResponseDTO?> GetAppelOffreByIdAsync(Guid id)
         {
-            var appelOffre = await _context.AppelOffres
+            var appelOffre = await _dbContext.AppelOffres
             .Include(ao => ao.CreatedBy)
             .Include(ao => ao.Documents)
-            .FirstOrDefaultAsync(ao => ao.Id == id);
+            .FirstOrDefaultAsync(ao => ao.Id == id && ao.CompanyId == CompanyId);
 
             if (appelOffre is null)
             {
@@ -135,13 +139,14 @@ namespace Synoptis.API.Services
                 DateLimite = dto.DateLimite,
                 CreeLe = DateTime.UtcNow,
                 CreatedById = userId,
+                CompanyId = CompanyId
             };
 
             //J'ajoute dans la bdd
-            _context.AppelOffres.Add(newAppelOffre);
+            _dbContext.AppelOffres.Add(newAppelOffre);
 
             // Je save le changement de maniere async
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
             // La je retourne un DTO en reponse (au front client)
 
@@ -161,7 +166,7 @@ namespace Synoptis.API.Services
         // methode pour modifier un AO
         public async Task<AppelOffreResponseDTO?> UpdateAppelOffre(Guid id, AppelOffreUpdateDTO dto)
         {
-            var appelOffreToUpdate = await _context.AppelOffres.FindAsync(id);
+            var appelOffreToUpdate = await _dbContext.AppelOffres.FirstOrDefaultAsync(ao => ao.Id == id && ao.CompanyId == CompanyId);
 
             if (appelOffreToUpdate == null)
             {
@@ -189,7 +194,7 @@ namespace Synoptis.API.Services
             }
 
             // Je save le changement de maniere async
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
             // La je retourne un DTO en reponse (au front client)
 
@@ -208,9 +213,9 @@ namespace Synoptis.API.Services
         // methode pour supprimer un AO 
         public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
         {
-            var appelOffreToDelete = await _context.AppelOffres
+            var appelOffreToDelete = await _dbContext.AppelOffres
             .Include(a => a.Documents)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(ao => ao.Id == id && ao.CompanyId == CompanyId);
 
             if (appelOffreToDelete is null)
             {
@@ -227,13 +232,13 @@ namespace Synoptis.API.Services
             }
 
             // La je supprime les documents lie a l'ao cote BDD
-            _context.DocumentsAppelOffre.RemoveRange(appelOffreToDelete.Documents);
+            _dbContext.DocumentsAppelOffre.RemoveRange(appelOffreToDelete.Documents);
 
             // je supprime l'ao de la bdd 
-            _context.AppelOffres.Remove(appelOffreToDelete);
+            _dbContext.AppelOffres.Remove(appelOffreToDelete);
 
             // Je save le changement de maniere async
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
             // La je retourne un DTO en reponse (au front client)
 
