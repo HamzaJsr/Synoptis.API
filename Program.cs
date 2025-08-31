@@ -102,6 +102,7 @@ builder.Services.AddScoped<IAppelOffreService, AppelOffreService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<EnumToStringService>();
+builder.Services.AddScoped<IClientService, ClientService>();
 
 
 // 🔑 Lecture de la clé JWT depuis la configuration et vérification qu'elle est bien définie

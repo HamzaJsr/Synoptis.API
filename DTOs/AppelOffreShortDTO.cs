@@ -1,4 +1,6 @@
 
+using Synoptis.API.Models;
+
 namespace Synoptis.API.DTOs
 {
     public class AppelOffreShortDTO
@@ -7,7 +9,7 @@ namespace Synoptis.API.DTOs
         public string Titre { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime DateLimite { get; set; }
-        public string NomClient { get; set; } = string.Empty;
+        public Client Client { get; set; } = null!;
         public string Statut { get; set; } = "En cours";
         public DateTime CreeLe { get; set; }
 

@@ -41,6 +41,7 @@ namespace Synoptis.API.Services
             var allAppelOffres = await _dbContext.AppelOffres
             .Where(ao => ao.CompanyId == CompanyId)
             .Include(ao => ao.CreatedBy)
+            .Include(a => a.Client)
             .Include(ao => ao.Documents)
             .ToListAsync();
 
@@ -129,86 +130,100 @@ namespace Synoptis.API.Services
         // methode pour ajouter un AO elle return un DTO pour le front
         public async Task<AppelOffreResponseDTO> CreateAppelOffreAsync(Guid userId, AppelOffreCreateDTO dto)
         {
+            if (dto.ClientId.HasValue)
+            {
+                var ok = await _dbContext.Clients
+                    .AnyAsync(c => c.Id == dto.ClientId.Value && c.CompanyId == CompanyId);
+                if (!ok) throw new UnauthorizedAccessException("Client introuvable pour votre société.");
+            }
 
-            // On transforme le DTO reçu en entité AppelOffre car on ne pourra envoyer en BDD que des type AppelOffre
-            var newAppelOffre = new AppelOffre
+            var entity = new AppelOffre
             {
                 Titre = dto.Titre,
                 Description = dto.Description,
-                NomClient = dto.NomClient,
                 DateLimite = dto.DateLimite,
                 CreeLe = DateTime.UtcNow,
                 CreatedById = userId,
-                CompanyId = CompanyId
+                CompanyId = CompanyId,
+                ClientId = dto.ClientId             // ✅ pas d’objet, juste la FK
             };
 
-            //J'ajoute dans la bdd
-            _dbContext.AppelOffres.Add(newAppelOffre);
-
-            // Je save le changement de maniere async
+            _dbContext.AppelOffres.Add(entity);
             await _dbContext.SaveChangesAsync();
 
-            // La je retourne un DTO en reponse (au front client)
+            // Charger pour la réponse
+            await _dbContext.Entry(entity).Reference(e => e.CreatedBy).LoadAsync();
+            await _dbContext.Entry(entity).Reference(e => e.Client).LoadAsync();
+            await _dbContext.Entry(entity).Collection(e => e.Documents).LoadAsync();
+
+            var statutFinal = entity.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : entity.Statut;
 
             return new AppelOffreResponseDTO
             {
-                Id = newAppelOffre.Id,
-                Titre = newAppelOffre.Titre,
-                Description = newAppelOffre.Description,
-                NomClient = newAppelOffre.NomClient,
-                DateLimite = newAppelOffre.DateLimite,
-                CreeLe = newAppelOffre.CreeLe,
-                Statut = _enumToStringService.StatutAoEnumService(newAppelOffre.Statut)
+                Id = entity.Id,
+                Titre = entity.Titre,
+                Description = entity.Description,
+                DateLimite = entity.DateLimite,
+                CreeLe = entity.CreeLe,
+                CreatedById = entity.CreatedById,
+                CreatedBy = entity.CreatedBy.Adapt<UserBasicDTO>(),
+                Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+
+                ClientId = entity.ClientId,                                   // ✅
+                ClientRaisonSociale = entity.Client?.RaisonSociale,           // ✅
+
+                Documents = entity.Documents.Adapt<ICollection<AppelOffreDocumentDTO>>()
             };
         }
+
 
 
         // methode pour modifier un AO
         public async Task<AppelOffreResponseDTO?> UpdateAppelOffre(Guid id, AppelOffreUpdateDTO dto)
         {
-            var appelOffreToUpdate = await _dbContext.AppelOffres.FirstOrDefaultAsync(ao => ao.Id == id && ao.CompanyId == CompanyId);
+            var entity = await _dbContext.AppelOffres
+                .Include(a => a.CreatedBy)
+                .Include(a => a.Client)
+                .Include(a => a.Documents)
+                .FirstOrDefaultAsync(a => a.Id == id && a.CompanyId == CompanyId);
 
-            if (appelOffreToUpdate == null)
+            if (entity is null) return null;
+
+            if (dto.Titre != null) entity.Titre = dto.Titre;
+            if (dto.Description != null) entity.Description = dto.Description;
+            if (dto.DateLimite != null) entity.DateLimite = dto.DateLimite.Value;
+
+            if (dto.ClientId.HasValue)                       // ✅ remplace ton ancien code
             {
-                return null; // ou NotFound() dans un contrôleur
+                var ok = await _dbContext.Clients
+                    .AnyAsync(c => c.Id == dto.ClientId.Value && c.CompanyId == CompanyId);
+                if (!ok) throw new UnauthorizedAccessException("Client introuvable pour votre société.");
+                entity.ClientId = dto.ClientId.Value;        // ✅ on modifie la FK
+                await _dbContext.Entry(entity).Reference(e => e.Client).LoadAsync(); // recharge pour la réponse
             }
 
-            if (dto.Titre != null)
-            {
-                appelOffreToUpdate.Titre = dto.Titre;
-            }
-
-            if (dto.Description != null)
-            {
-                appelOffreToUpdate.Description = dto.Description;
-            }
-
-            if (dto.DateLimite != null)
-            {
-                appelOffreToUpdate.DateLimite = (DateTime)dto.DateLimite;
-            }
-
-            if (dto.NomClient != null)
-            {
-                appelOffreToUpdate.NomClient = dto.NomClient;
-            }
-
-            // Je save le changement de maniere async
             await _dbContext.SaveChangesAsync();
 
-            // La je retourne un DTO en reponse (au front client)
+            var statutFinal = entity.DateLimite < DateTime.UtcNow ? StatutAppelOffre.Expire : entity.Statut;
 
             return new AppelOffreResponseDTO
             {
-                Id = appelOffreToUpdate.Id,
-                Titre = appelOffreToUpdate.Titre,
-                Description = appelOffreToUpdate.Description,
-                NomClient = appelOffreToUpdate.NomClient,
-                DateLimite = appelOffreToUpdate.DateLimite,
-                CreeLe = appelOffreToUpdate.CreeLe,
-                Statut = _enumToStringService.StatutAoEnumService(appelOffreToUpdate.Statut)
+                Id = entity.Id,
+                Titre = entity.Titre,
+                Description = entity.Description,
+                DateLimite = entity.DateLimite,
+                CreeLe = entity.CreeLe,
+                CreatedById = entity.CreatedById,
+                CreatedBy = entity.CreatedBy.Adapt<UserBasicDTO>(),
+                Statut = _enumToStringService.StatutAoEnumService(statutFinal),
+
+                ClientId = entity.ClientId,                                   // ✅
+                ClientRaisonSociale = entity.Client?.RaisonSociale,           // ✅
+
+                Documents = entity.Documents.Adapt<ICollection<AppelOffreDocumentDTO>>()
             };
         }
+
 
         // methode pour supprimer un AO 
         public async Task<AppelOffreResponseDTO?> DeleteAppelOffreAsync(Guid id)
@@ -247,7 +262,7 @@ namespace Synoptis.API.Services
                 Id = appelOffreToDelete.Id,
                 Titre = appelOffreToDelete.Titre,
                 Description = appelOffreToDelete.Description,
-                NomClient = appelOffreToDelete.NomClient,
+                ClientId = appelOffreToDelete.ClientId,
                 DateLimite = appelOffreToDelete.DateLimite,
                 CreeLe = appelOffreToDelete.CreeLe,
                 Statut = _enumToStringService.StatutAoEnumService(appelOffreToDelete.Statut)

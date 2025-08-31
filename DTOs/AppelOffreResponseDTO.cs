@@ -1,4 +1,3 @@
-using Synoptis.API.Models;
 
 namespace Synoptis.API.DTOs
 
@@ -11,7 +10,8 @@ namespace Synoptis.API.DTOs
         public string Titre { get; set; } = string.Empty; // Titre de l’appel d’offres
         public string Description { get; set; } = string.Empty; // Description globale
         public DateTime DateLimite { get; set; } // Date limite de réponse
-        public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
+        public Guid? ClientId { get; set; } // Le client qui a publié l’AO
+        public string? ClientRaisonSociale { get; set; }
 
         public string Statut { get; set; } = "En cours";
 

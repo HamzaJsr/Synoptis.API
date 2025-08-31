@@ -10,7 +10,11 @@ namespace Synoptis.API.Data
         public DbSet<AppelOffre> AppelOffres { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<DocumentAppelOffre> DocumentsAppelOffre { get; set; } = null!;
-        public DbSet<Company> Companies { get; set; } = null!; // ✅
+        public DbSet<Company> Companies { get; set; } = null!;
+
+        public DbSet<Client> Clients { get; set; } = null!;
+
+        public DbSet<ContactClient> ContactClients { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +31,38 @@ namespace Synoptis.API.Data
                 .WithMany(r => r.Collaborateurs)         // 8) Un Responsable a PLUSIEURS Collaborateurs (prop r.Collaborateurs)
                 .HasForeignKey(u => u.ResponsableId)     // 9) La FK est sur User: User.ResponsableId (vers User.Id)
                 .OnDelete(DeleteBehavior.Restrict);      // 10) On bloque la suppression en cascade (évite cycles/problèmes)
+
+            // Client → Company
+            modelBuilder.Entity<Client>()
+                .HasOne(c => c.Company)
+                .WithMany(co => co.Clients)
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ContactClient → Company
+            modelBuilder.Entity<ContactClient>()
+                .HasOne(c => c.Company)
+                .WithMany() // pas obligé d'ajouter une collection dans Company
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ContactClient → Client
+            modelBuilder.Entity<ContactClient>()
+                .HasOne(c => c.Client)
+                .WithMany(cl => cl.Contacts)
+                .HasForeignKey(c => c.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // AppelOffre → Client (optionnel)
+            modelBuilder.Entity<AppelOffre>()
+                .HasOne(a => a.Client)
+                .WithMany(c => c.AppelsOffre)
+                .HasForeignKey(a => a.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Index utile pour la recherche
+            modelBuilder.Entity<Client>()
+                .HasIndex(c => new { c.CompanyId, c.RaisonSociale });
         }
     }
 }
