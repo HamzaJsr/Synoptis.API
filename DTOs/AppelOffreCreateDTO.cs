@@ -1,3 +1,4 @@
+using Synoptis.API.Models;
 using Synoptis.API.Validation;
 
 namespace Synoptis.API.DTOs
@@ -9,7 +10,12 @@ namespace Synoptis.API.DTOs
         public string Description { get; set; } = string.Empty; // Description globale
         [FutureDate(ErrorMessage = "La date limite doit être dans le futur.")]
         public DateTime DateLimite { get; set; } // Date limite de réponse
-        public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
+
+        // 👇 Option A : relier un client existant
+        public Guid? ClientId { get; set; }
+
+        // 👇 Option B : créer un client à la volée
+        public ClientCreateDTO? Client { get; set; }
 
     }
 }

@@ -10,7 +10,10 @@ namespace Synoptis.API.Models
         public Guid Id { get; set; } = Guid.NewGuid(); // Identifiant unique généré automatiquement
 
         public string Titre { get; set; } = string.Empty; // Titre de l’appel d’offres
-        public string NomClient { get; set; } = string.Empty; // Le client qui a publié l’AO
+
+        public Guid? ClientId { get; set; }   // ✅ FK
+        public Client? Client { get; set; }   // navigation
+
         public string Description { get; set; } = string.Empty; // Description globale
 
         public DateTime DateLimite { get; set; }
@@ -23,7 +26,7 @@ namespace Synoptis.API.Models
         public User CreatedBy { get; set; } = null!;
 
         // 🔗 Multi-tenant
-        public Guid CompanyId { get; set; }          // ← FK
+        public Guid? CompanyId { get; set; }          // ← FK
         public Company Company { get; set; } = null!; // ← navigation
 
         //Ajout pour lier avec les documents d'appel d'offre

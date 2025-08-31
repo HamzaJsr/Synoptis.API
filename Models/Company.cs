@@ -34,5 +34,7 @@ namespace Synoptis.API.Models
         // 🔗 Relations
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<AppelOffre> AppelsOffre { get; set; } = new List<AppelOffre>();
+
+        public ICollection<Client> Clients { get; set; } = new List<Client>();
     }
 }
